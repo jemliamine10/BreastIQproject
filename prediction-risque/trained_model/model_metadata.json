@@ -1,0 +1,40 @@
+{
+    "version": "5.0.0",
+    "metrics_test": {
+        "f1": 0.5611015490533563,
+        "auc": 0.6390562913907285
+    },
+    "optimized_threshold": 0.2899999999999999,
+    "params": {
+        "depth": 5,
+        "learning_rate": 0.06852588121775724,
+        "l2_leaf_reg": 8.380840375327058,
+        "scale_pos_weight": 1.9884051359596902
+    },
+    "robustness_cv_f1": 0.5828090075025028,
+    "features": [
+        "age_at_diagnosis",
+        "type_of_breast_surgery",
+        "cellularity",
+        "chemotherapy",
+        "pam50_claudin_low_subtype",
+        "er_status_measured_by_ihc",
+        "er_status",
+        "neoplasm_histologic_grade",
+        "her2_status_measured_by_snp6",
+        "her2_status",
+        "tumor_other_histologic_subtype",
+        "hormone_therapy",
+        "inferred_menopausal_state",
+        "integrative_cluster",
+        "primary_tumor_laterality",
+        "lymph_nodes_examined_positive",
+        "mutation_count",
+        "nottingham_prognostic_index",
+        "pr_status",
+        "radio_therapy",
+        "3_gene_classifier_subtype",
+        "tumor_size",
+        "tumor_stage"
+    ]
+}

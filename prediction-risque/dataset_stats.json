@@ -1,0 +1,155 @@
+{
+    "type_of_breast_surgery": [
+        "Mastectomy",
+        "Breast Conserving",
+        "Unknown"
+    ],
+    "cellularity": [
+        "Unknown",
+        "High",
+        "Moderate",
+        "Low"
+    ],
+    "chemotherapy": [
+        "No",
+        "Yes",
+        "Unknown"
+    ],
+    "pam50_claudin_low_subtype": [
+        "claudin-low",
+        "LumA",
+        "LumB",
+        "Normal",
+        "Unknown",
+        "Her2",
+        "Basal",
+        "NC"
+    ],
+    "er_status_measured_by_ihc": [
+        "Positve",
+        "Negative",
+        "Unknown"
+    ],
+    "er_status": [
+        "Positive",
+        "Negative",
+        "Unknown"
+    ],
+    "her2_status_measured_by_snp6": [
+        "Neutral",
+        "Loss",
+        "Unknown",
+        "Gain",
+        "Undef"
+    ],
+    "her2_status": [
+        "Negative",
+        "Unknown",
+        "Positive"
+    ],
+    "tumor_other_histologic_subtype": [
+        "DuctalNST",
+        "Mixed",
+        "Lobular",
+        "Tubular cribriform",
+        "Unknown",
+        "Mucinous",
+        "Medullary",
+        "Other",
+        "Metaplastic"
+    ],
+    "hormone_therapy": [
+        "Yes",
+        "No",
+        "Unknown"
+    ],
+    "inferred_menopausal_state": [
+        "Post",
+        "Pre",
+        "Unknown"
+    ],
+    "integrative_cluster": [
+        "4ER",
+        "3",
+        "9",
+        "7",
+        "4ER-",
+        "Unknown",
+        "5",
+        "8",
+        "10",
+        "1",
+        "2",
+        "6"
+    ],
+    "primary_tumor_laterality": [
+        "Right",
+        "Left",
+        "Unknown"
+    ],
+    "pr_status": [
+        "Negative",
+        "Positive",
+        "Unknown"
+    ],
+    "radio_therapy": [
+        "Yes",
+        "No",
+        "Unknown"
+    ],
+    "3_gene_classifier_subtype": [
+        "ER-HER2-",
+        "ERHER2- High Prolif",
+        "Unknown",
+        "ERHER2- Low Prolif",
+        "HER2"
+    ],
+    "age_at_diagnosis": {
+        "min": 21.93,
+        "max": 96.29,
+        "mean": 60.423324033479474,
+        "type": "float64"
+    },
+    "neoplasm_histologic_grade": {
+        "min": 1.0,
+        "max": 3.0,
+        "mean": 2.4404145077720205,
+        "type": "float64"
+    },
+    "lymph_nodes_examined_positive": {
+        "min": 0.0,
+        "max": 45.0,
+        "mean": 1.7437225986448783,
+        "type": "float64"
+    },
+    "mutation_count": {
+        "min": 1.0,
+        "max": 80.0,
+        "mean": 5.543642885611797,
+        "type": "float64"
+    },
+    "nottingham_prognostic_index": {
+        "min": 1.0,
+        "max": 7.2,
+        "mean": 4.030132929453966,
+        "type": "float64"
+    },
+    "tumor_size": {
+        "min": 1.0,
+        "max": 182.0,
+        "mean": 25.99382622558788,
+        "type": "float64"
+    },
+    "tumor_stage": {
+        "min": 0.0,
+        "max": 4.0,
+        "mean": 1.7959346353128736,
+        "type": "float64"
+    },
+    "target": {
+        "min": 0.0,
+        "max": 1.0,
+        "mean": 0.39936229573535276,
+        "type": "int64"
+    }
+}
