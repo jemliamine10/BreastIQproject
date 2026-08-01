@@ -2,3 +2,6 @@ backend/src/main/resources/application.properties
 .angular/
 dist/
 node_modules/
+ai-mammography/app/models/*.pth
+ai-mammography/app/models/*.pkl
+ai-mammography/mobile_bc_detection/build/

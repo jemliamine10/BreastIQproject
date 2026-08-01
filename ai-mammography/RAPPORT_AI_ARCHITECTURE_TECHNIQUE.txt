@@ -1,0 +1,71 @@
+================================================================================
+ARCHITECTURE TECHNIQUE : GÉNÉRATION AUTOMATIQUE DE RAPPORT MÉDICAL IA (SafeScan)
+================================================================================
+
+Ce document décrit le fonctionnement technique de la génération de rapports 
+automatiques intégrée dans le système SafeScan.
+
+1. ARCHITECTURE GLOBALE (Workflow en Cascade)
+---------------------------------------------
+La fonctionnalité repose sur une architecture en 3 couches synchronisées :
+
+   A. FRONTEND (Angular) : 
+      Déclenche l'analyse et appelle automatiquement le service de rapport dès 
+      que les résultats de détection sont disponibles.
+      Fichier : imaging.component.ts (méthode startAnalysis)
+
+   B. BACKEND MÉTIER (Java/Spring Boot) : 
+      Orchestre les données. Il récupère les résultats techniques (coordonnées, 
+      verdicts, scores) en base de données et construit un "Prompt Médical" 
+      structuré pour l'IA.
+      Fichier : MammogramAnalysisService.java (méthode generateReport)
+
+   C. MOTEUR IA (Python/FastAPI - SafeScan) : 
+      Agit comme passerelle vers les modèles de langage (LLM). Il reçoit le 
+      prompt et communique avec l'API OpenRouter pour obtenir une analyse 
+      textuelle humaine.
+      Fichier : main.py (endpoint /conclusion)
+
+2. DÉTAILS DE L'IMPLÉMENTATION TECHNIQUE
+----------------------------------------
+
+   A. Déclenchement Automatique (Frontend) :
+      Pour éviter une action manuelle du médecin, le frontend souscrit à la 
+      réponse de l'analyse d'image. Si l'analyse réussit (ID d'analyse généré), 
+      il lance immédiatement un second appel asynchrone vers le service de rapport.
+
+   B. Construction du Prompt (Prompt Engineering) :
+      Le backend Java transforme les données brutes (JSON) en un contexte médical.
+      Structure du prompt envoyé à l'IA :
+      - Identité du patient
+      - Verdict global (Normal, Bénin, Malin, Mixte)
+      - Liste détaillée des détections (Type de lésion, Score de confiance)
+      - Caractéristiques morphologiques (Aire en mm2, circularité, etc.)
+      
+      Instruction système : "Générer un rapport de radiologie en Français structuré 
+      en : Résumé, Observations, Classification BI-RADS, Recommandations et Conclusion."
+
+   C. Modèle de Langage (LLM) :
+      - Modèle : meta-llama/llama-3.1-8b-instruct:free (via OpenRouter)
+      - Paramètres : Temperature = 0.7 (pour un équilibre entre précision et fluidité)
+      - Langue : Français (forcé par le prompt)
+
+3. MÉCANISME DE FALLBACK (SÉCURITÉ)
+-----------------------------------
+Si le service LLM est indisponible (problème réseau ou quota API), le système 
+ne reste pas vide. Le backend Java intègre un "Générateur Statistique" local :
+- Il analyse les résultats stockés.
+- Il génère un rapport pré-formaté basé sur des règles médicales déterministes.
+- Il assure ainsi que le médecin dispose toujours d'une base de document.
+
+4. RÉSUMÉ POUR LA SOUTENANCE (Points Clés)
+------------------------------------------
+- Automatisation complète : Réduction du temps administratif pour le radiologue.
+- Précision : Le rapport se base sur les caractéristiques morphologiques calculées 
+  par l'IA de vision (aire, périmètre, texture).
+- Format Standardisé : Utilisation de la classification BI-RADS (standard mondial).
+- Interopérabilité : Communication fluide entre Java (données) et Python (IA).
+
+================================================================================
+SafeScan - AI Powered Mammogram Analysis System
+================================================================================
