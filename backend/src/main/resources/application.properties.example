@@ -1,0 +1,45 @@
+spring.application.name=breastcancerBackend
+
+
+# === Configuration de la source de donnes PostgreSQL ===
+spring.datasource.url=jdbc:postgresql://localhost:5432/breast_cancer_db
+spring.datasource.username=postgres
+spring.datasource.password=YOUR_PASSWORD_HERE
+
+server.port=8081
+
+
+# Forcer l'encodage UTF-8
+spring.mandatory-file-encoding=UTF-8
+
+
+# === Configuration JPA / Hibernate ===
+# update : cre/modifie automatiquement les tables en fonction des entits
+spring.jpa.hibernate.ddl-auto=update
+
+# Affiche les requtes SQL dans la console (utile en dev)
+spring.jpa.show-sql=true
+
+
+# Dialecte spcifique PostgreSQL
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+
+
+spring.jpa.open-in-view=false
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# === File Upload Configuration ===
+spring.servlet.multipart.max-file-size=60MB
+spring.servlet.multipart.max-request-size=65MB
+
+# === Document Storage ===
+app.storage.local.path=./uploads/documents
+
+# === Profile Photo Storage ===
+app.storage.profile-photos.path=./uploads/profile-photos
+
+# === AI Service Configuration ===
+ai.api.url=http://localhost:8000
+
+# === Mammogram Analysis Storage ===
+app.storage.mammogram-analysis.path=./uploads/mammogram-analysis

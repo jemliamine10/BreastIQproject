@@ -1,0 +1,877 @@
+CAHIER DES CHARGES ULTRA DETAILLE
+Projet: Plateforme de suivi clinique du cancer du sein avec IA
+Version: 1.0
+Date: 2026-04-19
+
+====================================================================
+0) OBJECTIF DU DOCUMENT
+====================================================================
+Ce document formalise de facon exhaustive les besoins fonctionnels, techniques,
+organisationnels et qualitatifs du systeme global compose de:
+- Frontend web Angular (portail public, patient, medecin)
+- Backend Spring Boot (API, regles metier, orchestration, persistance)
+- IA #1 Mammogramme (detection/segmentation/classification + rapport)
+- IA #2 Prediction de risque de recurrence (CatBoost calibree)
+
+Ce cahier des charges est concu pour:
+- Encadrer la realisation technique
+- Servir de reference de recette/validation
+- Servir de base de soutenance technique (academique et entreprise)
+- Permettre une industrialisation progressive (MLOps, securite, observabilite)
+
+====================================================================
+1) CONTEXTE ET VISION PRODUIT
+====================================================================
+1.1 Contexte metier
+Le projet cible la prise en charge de patientes atteintes (ou suspectes) de
+pathologies mammaires/cancer du sein. Il vise a centraliser:
+- Le suivi clinique longitudinal (tracker, traitements, alertes, timeline)
+- La coordination patient-medecin (liens, RDV, documents, messaging)
+- L'assistance IA (chat educatif, analyse mammographique, prediction risque)
+
+1.2 Vision
+Offrir une plateforme numerique unifiee, orientee securite et aide a la
+decision, sans jamais remplacer le diagnostic medical humain.
+
+1.3 Positionnement clinique et legal
+- Outil d'aide a la decision et d'education
+- Non substitut a un diagnostic medical
+- Les sorties IA doivent etre interpretees et validees par un professionnel
+- Les mentions de limitation d'usage doivent etre visibles dans l'interface
+
+====================================================================
+2) PERIMETRE FONCTIONNEL GLOBAL
+====================================================================
+2.1 Acteurs
+- Visiteur (public): page d'accueil, login, inscription
+- Patient: dashboard, profil, docs, tracker, IA chat, RDV, notifications
+- Medecin: dashboard, patients, calendrier, docs, imagerie IA, tracker, liens
+- Admin technique (non expose en UI finale aujourd'hui): supervision operationnelle
+
+2.2 Domaines fonctionnels
+A. Authentification et comptes
+B. Profils Patient/Medecin
+C. Liens Patient-Medecin (workflow de connexion)
+D. Rendez-vous et disponibilites
+E. Dossiers et documents medicaux
+F. Traitements et sessions
+G. Tracker clinique, score de sante, alertes, timeline
+H. Messagerie et WebSocket temps reel
+I. IA Chat educatif (Ollama)
+J. IA Imagerie mammographique
+K. IA Prediction de recurrence
+
+2.3 Hors perimetre immediate production
+- Diagnostic medical autonome
+- Triage clinique automatique sans validation medecin
+- Interoperabilite hospitaliere standard HL7/FHIR complete (a prevoir)
+
+====================================================================
+3) ARCHITECTURE CIBLE (LOGIQUE ET PHYSIQUE)
+====================================================================
+3.1 Vue d'ensemble
+- Frontend Angular (SPA)
+- Backend Spring Boot REST + WebSocket STOMP
+- PostgreSQL (persistance metier)
+- Stockage fichiers local (abstraction evolutive vers S3/MinIO)
+- Service IA mammogramme FastAPI (port 8000)
+- Service IA prediction FastAPI (port 8002)
+- Service LLM local Ollama (port 11434)
+
+3.2 Flux principal
+Frontend -> Backend Spring Boot ->
+  (a) DB PostgreSQL
+  (b) IA Mammogramme (8000)
+  (c) IA Prediction (8002)
+  (d) Ollama Chat (11434)
+
+3.3 Principes architecturaux
+- Separation par couches: Controller -> Service -> Repository -> Entity
+- DTO explicites pour les contrats API
+- Orchestration metier dans les services
+- Gestion erreurs centralisee (exception handler)
+- Soft delete sur entites critiques
+- WebSocket pour evenements temps reel
+
+====================================================================
+4) EXIGENCES FRONTEND (ANGULAR) - ULTRA DETAILLE
+====================================================================
+4.1 Stack et conventions
+- Angular 19
+- Routing protege par guards (public/patient/doctor)
+- HttpClient pour tous les appels API
+- Base API: /api ; Base WS: /ws
+- Support charts/reporting: chart.js, ng2-charts, html2pdf
+
+4.2 Parcours Public
+4.2.1 Landing
+- Afficher proposition de valeur, acces login/inscription
+4.2.2 Login
+- Saisie credentials
+- Appel /api/auth/login
+- Persist user courant localStorage
+- Redirection role-based
+4.2.3 Inscription
+- Ecrans dedies patient et medecin
+- Validation front des champs obligatoires
+
+4.3 Parcours Patient
+4.3.1 Dashboard patient
+- Resume statut, prochain RDV, indicateurs cle
+- Rafraichissement donnees au chargement
+
+4.3.2 Profil patient
+- Edition donnees profil
+- Consultation informations cliniques de base
+
+4.3.3 Mes medecins
+- Liste medecins connectes
+- Etat de lien (ACTIVE/REQUESTED/...)
+
+4.3.4 Rendez-vous patient
+Fonctions:
+- Lister (pagination, filtres)
+- Voir detail
+- Creer via creneaux disponibles et linkId valide
+- Modifier/replanifier
+- Annuler (soft delete)
+- Recuperer prochain RDV et statistiques
+Contraintes:
+- Date/heures ISO UTC
+- Mode obligatoire (ONLINE/OFFLINE ou enum equivalent selon endpoint)
+- Validation stricte des champs
+
+4.3.5 Documents patient
+- Upload document + metadata
+- Partage a un medecin
+- Liste paginee + compte par categorie
+- Download/Delete selon droits
+- Reactions temps reel via topic patient
+
+4.3.6 Imagerie patient
+- Consultation historique analyses liees au patient
+- Affichage rendu et rapport genere
+
+4.3.7 Tracker patient
+- Soumission quotidienne (douleur/fatigue/humeur/temperature/etc.)
+- Historique et derniere entree
+- Visualisation des tendances
+- Remontee immediate backend (declenche pipeline clinique)
+
+4.3.8 Messagerie patient
+- Echange avec medecins connectes
+- Etats de presence/notifications
+
+4.3.9 Education + Notifications + Billing
+- Education: contenu d'information clinique
+- Notifications: alertes et updates
+- Billing: section reservee au suivi administratif
+
+4.3.10 AI Chat Widget patient
+- Widget flottant acces rapide
+- Envoi message -> /api/chat
+- Affichage reponse empathique + suggestions medecins
+- Affichage cartes medecins proposes (photo, specialite, dispo)
+
+4.4 Parcours Medecin
+4.4.1 Dashboard medecin
+- Synthese patients, alertes, activites recentes
+
+4.4.2 Patients
+- Liste patients lies actifs
+- Filtres et acces detail parcours
+
+4.4.3 Traitements
+- Creation traitement
+- Generation sessions
+- Changement statut sessions (DONE/MISSED)
+- Refresh statuts auto
+
+4.4.4 Imagerie medecin
+- Selection patient lie
+- Upload mammogramme (PNG/JPG/JPEG/DICOM)
+- Progression analyse
+- Visualisation resultats (annotee, segmentation, originale)
+- Generation rapport IA
+- Export PDF
+- Historique des analyses
+- Module prediction risque (formulaire + resultat)
+
+4.4.5 Tracker medecin
+- Vue cohortes patients lies
+- Derniere entree + tendances
+- Detection rapide patients a risque
+
+4.4.6 Documents medecin
+- Upload doc pour patient (auto partage)
+- Changement statut doc (pending/validated/archived)
+- Lecture/preview/download
+- Notifications via WebSocket
+
+4.4.7 Liens medecin
+- Voir demandes en attente
+- Accepter/refuser
+- Voir liens actifs
+
+4.4.8 Profil medecin
+- Gestion informations professionelles (specialite, clinique, etc.)
+
+4.4.9 Calendrier medecin
+- Gestion disponibilites hebdo
+- Gestion exceptions (indisponibilites)
+- Visualisation planning et slots
+
+4.5 Exigences UX/UI
+- Navigation role-based claire
+- Etats de chargement robustes
+- Messages d'erreur explicites
+- Gestion cas no data
+- Coherence des labels statuts entre modules
+
+4.6 Exigences front de robustesse
+- Ne jamais supposer presence d'un token si backend est cookie/session-based
+- Rejouer chargements critiques en cas d'erreur transitoire
+- Proteger toutes routes privees via guards
+- Eviter logiques metier lourdes cote front (calculees backend)
+
+====================================================================
+5) EXIGENCES BACKEND (SPRING BOOT) - ULTRA DETAILLE
+====================================================================
+5.1 Stack
+- Spring Boot REST
+- JPA/Hibernate
+- PostgreSQL
+- WebSocket/STOMP
+- Multipart uploads
+
+5.2 Domaines backend principaux
+A. Auth
+B. Users/Profiles
+C. Links
+D. Appointments + Availability + Exceptions
+E. Medical Records + Clinical Data
+F. Treatments + Sessions
+G. Tracker + AlertEngine + RiskEngine + HealthScore + Timeline
+H. Documents + Storage
+I. Messaging temps reel
+J. Dashboards
+K. AI Chat
+L. Mammogram Analysis
+M. Risk Prediction
+
+5.3 Exigences API globales
+- Contrats JSON stricts
+- Validation champs requis
+- Codes HTTP coherents
+- Messages d'erreur actionnables
+- Idempotence ou controle duplicate si necessaire
+
+5.4 Rendez-vous et disponibilites
+- Gestion CRUD RDV
+- Verification creneau libre
+- Respect timezone medecin
+- Lien patient-medecin actif requis
+- Historisation replanification via rescheduledFrom
+- Endpoint next appointment retourne 200 avec null si aucun
+
+5.5 Documents medicaux
+- Upload patient/medecin
+- Metadata obligatoire (nom, categorie, pages)
+- Workflow partage/validation
+- Controle d'acces base sur lien actif
+- Soft delete + suppression physique fichier
+
+5.6 Tracker/alertes/sante
+Pipeline a respecter a chaque soumission tracker:
+1) Persister entree tracker
+2) Evaluer regles alertes cliniques
+3) Evaluer risque (moteur interne ou IA)
+4) Calculer health score 0-100
+5) Mettre a jour patientStatus (STABLE/WARNING/CRITICAL)
+6) Enregistrer timeline evenement
+7) Pousser notification WebSocket
+
+5.7 Traitements
+- Creation traitement associe patient+medecin
+- Sessions planifiees selon intervalDays
+- Marquage done/missed/cancelled
+- Regles statut traitement (UPCOMING/ACTIVE/COMPLETED/STOPPED)
+
+5.8 AI Chat (backend)
+- Endpoint /api/chat
+- Historique conversation par sessionId (memoire en RAM)
+- Prompt systeme medical empathique
+- Enrichissement par contexte medecins reels DB
+- Suggestions medecins retournees au frontend
+- Gestion resiliente erreurs Ollama (timeout/unreachable/http)
+
+5.9 Mammogram AI orchestration (backend)
+- Endpoint health IA: /api/v1/mammogram/health
+- Endpoint analyse upload: /api/v1/doctor/{doctorId}/mammogram/analyze
+- Validation type fichier et taille
+- Appel FastAPI /predict en multipart
+- Parsing sortie IA
+- Persist analyse en DB + images sur disque
+- Endpoints historique/detail/report
+
+5.10 Risk Prediction orchestration (backend)
+- Endpoint health IA risque
+- Endpoint predict direct
+- Endpoint predict-for-patient avec auto-remplissage DB
+- Merge overrides utilisateur
+- Appel FastAPI /predict-risk
+- Retour score + niveau risque + meta model
+
+5.11 WebSocket temps reel
+Topics principaux:
+- /topic/alerts/{doctorId}
+- /topic/status/{patientId}
+- /topic/patient/{patientId}
+- /topic/doctor/{doctorId}
+
+5.12 Gestion erreurs
+- Mappage exceptions metier -> HTTP adapte
+- Erreurs IA explicites (service indisponible, timeout, payload invalide)
+- Aucune stacktrace brute exposee en prod
+
+====================================================================
+6) IA #1 MAMMOGRAMME (SAFE SCAN) - ULTRA DETAILLE
+====================================================================
+6.1 But fonctionnel
+Analyser des mammographies (DICOM ou image standard) pour:
+- Detecter lesions (ex: mass, calc)
+- Segmenter zones suspectes
+- Classifier lesion (Benign/Malignant)
+- Fournir visualisations + features radiomiques
+- Produire un rapport textuel de conclusion
+
+6.2 Stack IA
+- FastAPI
+- PyTorch/Torchvision (Mask R-CNN + backbone ConvNeXt/FPN)
+- Keras (extracteurs DenseNet121/ConvNeXtTiny pour classification)
+- SVM (joblib) + scaler
+- OpenCV, pydicom, scikit-image
+- OpenRouter LLM (fallback local si cle absente)
+
+6.3 Endpoints IA
+- GET /health
+- POST /predict (multipart file + pixel_spacing)
+- POST /conclusion (prompt JSON)
+- POST /send-email
+
+6.4 Pipeline technique detaille
+Etape 1: Ingestion
+- Verifier extension autorisee (.dcm/.dicom/.png/.jpg/.jpeg)
+- Verifier taille max (60 MB)
+
+Etape 2: Normalisation image
+- Si DICOM: conversion en PNG 8 bits
+- Sinon image directe
+
+Etape 3: Detection/segmentation
+- Inference Mask R-CNN
+- Filtrage confidence threshold
+- Fusion masques overlap meme classe
+
+Etape 4: Classification lesion
+- Crop intelligent ROI par bounding box
+- Extraction features deep DenseNet+ConvNeXt
+- Standardisation features
+- Prediction SVM -> Benign/Malignant
+
+Etape 5: Feature engineering interpretables
+- Morphology: area, perimeter, circularity, eccentricity
+- Intensity: mean, std
+- Texture: GLCM homogeneity
+
+Etape 6: Packaging reponse
+- Image originale base64
+- Image annotee base64
+- Image segmentation base64
+- Liste predictions individuelles + features
+
+Etape 7: Rapport medical textuel
+- Prompt structure a partir des resultats
+- Appel /conclusion LLM
+- Si echec LLM: fallback rapport local
+
+6.5 Integration backend Spring
+- Backend appelle /predict et parse JSON
+- Persist metadonnees en DB
+- Persist images decodees sur disque (folder unique UUID)
+- Expose endpoints detail/historique/report au frontend
+
+6.6 Exigences metriques IA (cible)
+- Mesurer precision, recall, F1 par classe lesion
+- Mesurer temps moyen inference par image
+- Mesurer taux d'echec parsing ou payload
+- Versionner modeles utilises a chaque inference
+
+6.7 Risques techniques
+- Latence inference sur CPU
+- Taille payload base64 elevee
+- Variabilite qualite image DICOM
+- Faux positifs/faux negatifs
+
+6.8 Mitigations
+- Timeouts backend ajustes
+- Compression/stockage objet futur
+- Monitoring qualite donnees image
+- Validation humaine obligatoire avant decision clinique
+
+====================================================================
+7) IA #2 PREDICTION RISQUE (METABRIC) - ULTRA DETAILLE
+====================================================================
+7.1 But fonctionnel
+Estimer la probabilite de recurrence cancer du sein a partir de 22+ features
+cliniques/molculaires, et retourner un niveau de risque interpretable.
+
+7.2 Stack IA
+- FastAPI + Uvicorn
+- CatBoost (modele calibre)
+- pandas/numpy/scikit-learn
+- pydantic validation stricte
+
+7.3 Endpoints IA risque
+- GET /health
+- GET /dataset-stats
+- POST /predict-risk
+
+7.4 Features principales (extraits)
+- age_at_diagnosis
+- type_of_breast_surgery
+- cellularity
+- chemotherapy
+- pam50_claudin_low_subtype
+- er/pr/her2 statuses
+- neoplasm_histologic_grade
+- tumor_size
+- tumor_stage
+- lymph_nodes_examined_positive
+- mutation_count
+- nottingham_prognostic_index
+- 3_gene_classifier_subtype
+
+7.5 Pipeline data science d'apprentissage
+- Split 3 voies sans fuite: train/val/test
+- Tuning Optuna + cross validation
+- Calibration probabiliste (Platt)
+- Optimisation threshold sur val
+- Evaluation finale sur test holdout
+- Generation metadata model (version, metrics, threshold, params)
+
+7.6 Metriques actuellement exposees
+- AUC test
+- F1 test
+- Threshold optimise
+- Nombre de features utilisees
+
+7.7 Inference runtime
+- Charger model + metadata + dataset stats au startup
+- Valider payload pydantic (bornes numeric + enums libres)
+- Construire dataframe dans ordre exact features
+- predict_proba -> probability
+- Determiner is_high_risk et risk_level
+
+7.8 Mapping backend -> IA risque
+- Backend peut auto-remplir champs depuis PatientProfile/MedicalRecord/Treatment
+- Overrides manuels front fusionnes s'ils non nuls
+- Conversion enums cliniques vers representation attendue dataset
+
+7.9 Risques et limites
+- Distribution drift entre donnees locales et METABRIC
+- Variables manquantes ou mappees approximativement
+- Seuil optimal dataset peut ne pas etre optimal population locale
+
+7.10 Mitigations
+- Monitoring drift data/model
+- Recalibration periodique seuil
+- Re-entranement avec donnees locales anonymisees et gouvernees
+- Validation clinique retrospective avant usage avance
+
+====================================================================
+8) IA CHAT EDUCATION (OLLAMA) - ULTRA DETAILLE
+====================================================================
+8.1 Objectif
+Fournir assistance conversationnelle empathique et informative, orientee
+education/sensibilisation, sans diagnostic.
+
+8.2 Fonctionnement
+- Prompt systeme impose role + regles de securite
+- Message utilisateur ajoute a l'historique session
+- Enrichissement avec contexte medecins reels verifies
+- Appel Ollama /api/chat
+- Reponse retournee + suggestions medecins
+
+8.3 Regles de surete contenu
+- Ne jamais diagnostiquer
+- Eviter formulations anxiogenes
+- Proposer consultation medecin reelle
+- Poser question de clarification
+
+8.4 Gestion erreurs technique
+- Timeout -> message explicite
+- Service indisponible -> 503
+- Reponse vide -> erreur controllable
+
+8.5 Limites
+- Historique en memoire volatile (perte au restart)
+- Pas de moderation medicale avancee multi-niveaux
+- Dependance au modele local Ollama
+
+8.6 Evolutions recommandees
+- Persister conversation en DB chifree (optionnel)
+- Ajouter garde-fous NLP (content safety)
+- Ajouter metriques qualite reponses (feedback thumbs up/down)
+
+====================================================================
+9) MODELE DE DONNEES METIER (RESUME STRUCTURE)
+====================================================================
+9.1 Entites principales
+- User
+- PatientProfile
+- DoctorProfile
+- PatientDoctorLink
+- Appointment
+- Availability
+- AvailabilityException
+- MedicalRecord
+- ClinicalData
+- Treatment
+- TreatmentSession
+- TrackerEntry
+- Alert
+- MedicalEvent (timeline)
+- MedicalDocument
+- MammogramAnalysis
+- ChatMessage (messagerie)
+
+9.2 Relations critiques
+- User 1-1 PatientProfile ou DoctorProfile
+- PatientProfile <-> DoctorProfile via PatientDoctorLink
+- Appointment rattache au lien patient-medecin
+- MedicalRecord rattache au patient
+- Treatment rattache patient+medecin
+- MammogramAnalysis rattache patient+medecin
+
+9.3 Integrite attendue
+- UUID sur ressources sensibles
+- Soft delete sur objets cliniques importants
+- Audit timestamps sur creations/updates/suppressions logiques
+
+====================================================================
+10) CONTRATS API ET PROCESSUS CLES
+====================================================================
+10.1 Processus creation lien patient-medecin
+Preconditions:
+- Patient et medecin existants
+Flux:
+1) POST create-request
+2) Etat REQUESTED
+3) Medecin accepte/refuse
+4) Etat ACTIVE ou REJECTED
+Sorties:
+- LinkResponseDto mis a jour
+
+10.2 Processus creation rendez-vous patient
+Preconditions:
+- Lien ACTIVE
+- Creneau disponible
+Flux:
+1) Recuperer slots
+2) Choisir slot
+3) POST creation (linkId,startAt,endAt,mode)
+4) Validation backend
+5) Persistance RDV
+Sorties:
+- Appointment DTO
+
+10.3 Processus upload document patient
+Preconditions:
+- Patient authentifie
+Flux:
+1) Upload fichier + metadata
+2) Persist metadata
+3) Statut pending
+4) Option partage medecin
+5) Notif WS
+
+10.4 Processus tracker clinique
+Preconditions:
+- Patient authentifie
+Flux:
+1) POST tracker
+2) Pipeline alert/risk/score/status/timeline/WS
+Sorties:
+- TrackerEntry persistee + impact statut
+
+10.5 Processus analyse mammogramme
+Preconditions:
+- Medecin authentifie
+- Patient lie ACTIVE
+Flux:
+1) Upload image
+2) Appel IA /predict
+3) Persist resultats et images
+4) Retour result frontend
+5) Generation rapport optionnelle
+
+10.6 Processus prediction risque
+Preconditions:
+- Patient existant
+Flux:
+1) Collecte donnees DB + overrides
+2) Appel IA /predict-risk
+3) Retour prob, risk_level, meta
+
+====================================================================
+11) EXIGENCES NON FONCTIONNELLES
+====================================================================
+11.1 Performance
+- API standard < 500 ms (hors IA)
+- IA mammogramme: cible < 30 s image standard (selon infra)
+- IA risque: cible < 2 s
+- WS push < 2 s apres evenement
+
+11.2 Disponibilite
+- Services core backend: >= 99.5% cible initiale
+- Degradation gracieuse si IA indisponible
+
+11.3 Scalabilite
+- Possibilite horizontal scale backend
+- Externalisation stockage fichiers
+- Queue asynchrone pour jobs IA long terme
+
+11.4 Fiabilite
+- Reprise sur erreurs transitoires reseau IA
+- Logs erreurs corrlees par requestId
+- Idempotence sur operations sensibles quand pertinent
+
+11.5 Maintenabilite
+- Conventions nommage et structure modules stables
+- Couverture tests progressive
+- Documentation API tenue a jour
+
+====================================================================
+12) SECURITE, CONFIDENTIALITE, CONFORMITE
+====================================================================
+12.1 Securite applicative
+- Auth robuste (evolution vers JWT/OAuth2)
+- Autorisation stricte role + ownership + lien actif
+- Validation entree forte (UUID, enums, bornes)
+- Protection upload (type, taille, path traversal)
+
+12.2 Donnees sensibles
+- Chiffrement transport TLS obligatoire en prod
+- Politique retention documents/images medicales
+- Journalisation acces donnees patient
+
+12.3 Gouvernance IA
+- Tracabilite version modele par prediction
+- Horodatage inference
+- Possibilite d'audit des sorties IA
+
+12.4 Conformite cible
+- Alignement RGPD / protection donnees de sante
+- Consentement patient explicite pour usage IA
+
+====================================================================
+13) OBSERVABILITE ET EXPLOITATION
+====================================================================
+13.1 Logs
+- Backend: logs structures niveau INFO/WARN/ERROR
+- IA: logs startup model, inference, erreurs endpoint
+
+13.2 Metrics
+- API latency p95/p99
+- Error rate par endpoint
+- Taux indisponibilite services IA
+- Temps inference moyen et ecart-type
+- Taux generation rapport reussie/echouee
+
+13.3 Alerting technique
+- Health checks periodiques (backend + IA)
+- Alertes si service IA down > seuil
+- Alertes si latence inference depasse seuil
+
+13.4 Sauvegarde et PRA
+- Backup DB quotidien
+- Sauvegarde stockage documents/images
+- Procedure restore testee periodiquement
+
+====================================================================
+14) QUALITE, TESTS ET RECETTE
+====================================================================
+14.1 Strategie de test
+- Unit tests services metier critiques
+- Integration tests API REST
+- Tests WS sur topics critiques
+- Tests E2E parcours patient/medecin
+- Tests IA contractuels (schema payload, codes retour)
+
+14.2 Jeux de tests obligatoires
+- Cas nominal complet pour chaque module
+- Cas erreurs (bad payload, unauthorized, not found)
+- Cas limites (no data, service IA down, timeout)
+- Cas securite (acces croise patient non autorise)
+
+14.3 Criteres d'acceptation globaux
+- 100% parcours critiques executables sans blocage
+- Erreurs utilisateur comprehensibles
+- Donnees persistees coherentes et retraçables
+- IA degradee sans crash backend
+
+14.4 Recette fonctionnelle par lot
+Lot 1: Auth + profils + liens
+Lot 2: RDV + calendrier
+Lot 3: Documents + WS
+Lot 4: Tracker + alertes + timeline
+Lot 5: IA chat
+Lot 6: IA mammogramme
+Lot 7: IA risque
+
+====================================================================
+15) ROADMAP D'INDUSTRIALISATION (MLOPS + BACKEND)
+====================================================================
+15.1 Priorite haute (0-3 mois)
+- Securisation auth (JWT/OAuth)
+- Swagger/OpenAPI complet
+- Logging structure + correlation IDs
+- Dashboards monitoring API/IA
+- Politique backup automatisee
+
+15.2 Priorite moyenne (3-6 mois)
+- Mise en file asynchrone traitements IA longs
+- Stockage objet externalise (S3/MinIO)
+- Versioning model registry
+- Pipeline CI/CD avec tests auto
+
+15.3 Priorite avancee (6-12 mois)
+- Monitoring drift donnees/modeles
+- Recalibration automatique seuil IA risque
+- Reentranement periodique gouverne
+- Gouvernance clinique/ethique formalisee
+
+====================================================================
+16) CHARGE, ROLES ET ORGANISATION PROJET
+====================================================================
+16.1 Roles
+- Product Owner / Referent clinique
+- Lead Backend
+- Lead Frontend
+- ML Engineer IA imagerie
+- ML Engineer IA risque
+- DevOps/SRE
+- QA Engineer
+
+16.2 Mode de travail recommande
+- Sprints de 2 semaines
+- DoR/DoD strictes
+- Revues architecture mensuelles
+- Revue risque clinique trimestrielle
+
+16.3 Livrables attendus
+- Code versionne
+- Documentation API
+- Runbooks exploitation
+- Plan de test + rapports
+- Evidence metriques IA
+
+====================================================================
+17) RISQUES PROJET ET PLAN DE MITIGATION
+====================================================================
+R1: Dependance forte services IA externes
+Mitigation: fallback + health checks + retry + circuit breaker
+
+R2: Incoherence mappings cliniques -> features IA risque
+Mitigation: table de mapping versionnee + validation medecin
+
+R3: Charge infrastructure inference imagerie
+Mitigation: profiling, GPU plan, queue asynchrone
+
+R4: Exposition donnees sensibles
+Mitigation: RBAC strict, chiffrement, audit logs, revues securite
+
+R5: Dette technique modules heterogenes
+Mitigation: normalisation DTO, conventions, refactoring incremental
+
+====================================================================
+18) ANNEXE A - ENDPOINTS CLES (SYNTHESE)
+====================================================================
+A. Auth
+- POST /api/auth/login
+
+B. Links
+- POST /api/links/create-request
+- GET /api/links/pending
+- GET /api/links/connected
+- POST /api/links/approve
+- POST /api/links/refuse
+
+C. Appointments
+- GET /api/patient/appointments
+- GET /api/patient/appointments/{id}
+- POST /api/appointments
+- PUT /api/appointments/{id}
+- DELETE /api/appointments/{id}
+- GET /api/patient/appointments/next
+- GET /api/patient/appointments/stats
+- GET /api/patient/appointments/timeline
+- GET /api/appointments/available
+
+D. Documents
+- GET /api/v1/patient/{patientId}/documents
+- POST /api/v1/patient/{patientId}/documents/upload
+- POST /api/v1/patient/{patientId}/documents/{id}/share
+- GET /api/v1/patient/documents/{id}/download
+- DELETE /api/v1/patient/documents/{id}
+- GET /api/v1/doctor/{doctorId}/patients/{patientId}/documents
+- POST /api/v1/doctor/{doctorId}/patients/{patientId}/documents/upload
+- PATCH /api/v1/doctor/{doctorId}/documents/{id}/status
+
+E. Tracker
+- POST /api/tracker
+- GET /api/tracker/patient/{patientId}
+- GET /api/tracker/patient/{patientId}/latest
+
+F. AI Chat
+- POST /api/chat
+
+G. Mammogram AI
+- GET /api/v1/mammogram/health
+- POST /api/v1/doctor/{doctorId}/mammogram/analyze
+- GET /api/v1/doctor/{doctorId}/mammogram/history
+- GET /api/v1/doctor/{doctorId}/mammogram/patient/{patientId}/history
+- GET /api/v1/mammogram/analysis/{analysisId}
+- POST /api/v1/mammogram/analysis/{analysisId}/report
+
+H. Risk Prediction
+- GET /api/v1/risk-prediction/health
+- POST /api/v1/risk-prediction/predict
+- POST /api/v1/risk-prediction/predict-for-patient/{patientId}
+
+====================================================================
+19) ANNEXE B - CHECKLIST GO LIVE
+====================================================================
+- Environnements DEV/TEST/PROD separes
+- Secrets externalises (pas en clair)
+- TLS actif partout
+- Monitoring actif (backend + IA)
+- Backup/restauration valides
+- Recette complete signee
+- Mentions legales et disclaimer medical affiches
+- Plan incident/astreinte defini
+
+====================================================================
+20) CONCLUSION EXECUTIVE
+====================================================================
+La plateforme est riche, modulaire et deja avancee, avec une integration IA
+reelle sur deux axes forts: imagerie mammographique et prediction de recurrence.
+Le succes de la mise en production dependra surtout de:
+1) securisation et gouvernance des donnees de sante,
+2) robustesse operationnelle des services IA,
+3) standardisation des contrats API,
+4) validation clinique continue des sorties IA.
+
+Ce cahier des charges constitue la base de reference pour piloter
+l'implementation, la recette et l'industrialisation progressive du systeme.

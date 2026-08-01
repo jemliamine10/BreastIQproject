@@ -1,0 +1,4 @@
+backend/src/main/resources/application.properties
+.angular/
+dist/
+node_modules/
