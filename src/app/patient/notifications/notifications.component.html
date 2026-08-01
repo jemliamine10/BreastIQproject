@@ -1,0 +1,39 @@
+<div class="notifications-page">
+  <div class="loading-state" *ngIf="loading"><div class="loading-pulse"></div><span>Chargement des notifications…</span></div>
+
+  <header class="page-header" *ngIf="!loading">
+    <h1 class="page-title">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      Notifications
+    </h1>
+    <p class="page-subtitle">{{ alerts.length }} alerte{{ alerts.length !== 1 ? 's' : '' }}</p>
+  </header>
+
+  <div class="alerts-list" *ngIf="!loading">
+    <div class="alert-card" *ngFor="let a of alerts" [class]="getSeverityClass(a.severity)">
+      <div class="alert-severity-bar" [class]="getSeverityClass(a.severity)"></div>
+      <div class="alert-content">
+        <div class="alert-top-row">
+          <div class="alert-type-chip" [class]="getSeverityClass(a.severity)">{{ getAlertTypeLabel(a.alertType) }}</div>
+          <span class="alert-sev-badge" [class]="getSeverityClass(a.severity)">{{ getSeverityLabel(a.severity) }}</span>
+          <span class="alert-time">{{ timeAgo(a.createdAt) }}</span>
+        </div>
+        <p class="alert-message">{{ a.message }}</p>
+        <div class="alert-footer">
+          <span class="alert-date">{{ formatDate(a.createdAt) }}</span>
+          <span class="resolved-badge" *ngIf="a.resolved">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+            Résolu
+          </span>
+          <span class="unresolved-badge" *ngIf="!a.resolved">Non résolu</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="alerts.length === 0">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+      <p>Aucune notification</p>
+      <span>Tout est en ordre !</span>
+    </div>
+  </div>
+</div>

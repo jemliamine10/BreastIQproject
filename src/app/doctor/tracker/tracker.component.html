@@ -1,0 +1,384 @@
+<div class="tracker-page">
+  <!-- Background Orbs -->
+  <div class="orb orb--1"></div>
+  <div class="orb orb--2"></div>
+  <div class="orb orb--3"></div>
+
+  <div class="loading-state" *ngIf="loading">
+    <div class="loading-ring">
+      <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="none" stroke-width="3" stroke="url(#lg)" stroke-dasharray="80 50" stroke-linecap="round"/><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#a95e92"/><stop offset="100%" stop-color="#ebaece"/></linearGradient></defs></svg>
+    </div>
+    <span>Chargement des patients…</span>
+  </div>
+
+  <ng-container *ngIf="!loading">
+    <header class="page-header">
+      <div class="header-left">
+        <h1 class="page-title">
+          <span class="title-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </span>
+          Suivi Clinique
+        </h1>
+        <p class="page-subtitle">Monitoring en temps réel des symptômes et indicateurs vitaux de vos patients</p>
+      </div>
+      <div class="header-stats">
+        <div class="h-stat">
+          <span class="h-stat-num">{{ patients.length }}</span>
+          <span class="h-stat-label">Patients suivis</span>
+        </div>
+        <div class="h-stat" *ngIf="getHighRiskCount() > 0">
+          <span class="h-stat-num" style="color:#e04668">{{ getHighRiskCount() }}</span>
+          <span class="h-stat-label">Risque élevé</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="main-grid">
+      <!-- ═══ Patient Selector (Top Strip) ═══ -->
+      <div class="selector-panel">
+        <div class="selector-top-row">
+          <div class="search-box">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input type="text" [(ngModel)]="searchTerm" placeholder="Rechercher un patient…">
+          </div>
+          <div class="patients-scroll">
+            <div class="patient-chip" *ngFor="let p of filteredPatients; let i = index"
+                 [class.selected]="selectedPatient?.patientProfileId === p.patientProfileId"
+                 (click)="selectPatient(p)">
+              <div class="chip-avatar" [class]="getStatusClass(p.patientStatus)">
+                <img *ngIf="getPatientPhoto(p)" [src]="getPatientPhoto(p)" class="avatar-img" alt="Patient">
+                <span *ngIf="!getPatientPhoto(p)">{{ getInitials(p) }}</span>
+              </div>
+              <div class="chip-body">
+                <span class="chip-name">{{ p.firstName }} {{ p.lastName }}</span>
+              </div>
+              <div class="chip-score-wrap">
+                <svg class="chip-ring" viewBox="0 0 36 36">
+                  <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(22,21,69,0.04)" stroke-width="3"/>
+                  <circle cx="18" cy="18" r="15" fill="none"
+                    [attr.stroke]="p.healthScore >= 60 ? '#10b981' : p.healthScore >= 35 ? '#e5953e' : '#e04668'"
+                    stroke-width="3" stroke-linecap="round"
+                    [attr.stroke-dasharray]="(p.healthScore / 100 * 94.25) + ' ' + (94.25 - p.healthScore / 100 * 94.25)"
+                    stroke-dashoffset="23.5" transform="rotate(-90 18 18)"/>
+                </svg>
+                <span class="chip-score-text" [class]="getScoreClass(p.healthScore)">{{ p.healthScore }}</span>
+              </div>
+            </div>
+            <div class="empty-list" *ngIf="filteredPatients.length === 0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+              <span>Aucun patient trouvé</span>
+            </div>
+          </div>
+          <button class="chip-deselect" *ngIf="selectedPatient" (click)="deselectPatient()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ═══ Tracker Detail Area ═══ -->
+      <div class="detail-area" *ngIf="selectedPatient && !loadingTracker">
+
+        <!-- Patient Header -->
+        <div class="content-header glass-card">
+          <div class="patient-hero">
+            <div class="hero-avatar" [class]="getStatusClass(selectedPatient.patientStatus)">
+              <img *ngIf="getPatientPhoto(selectedPatient)" [src]="getPatientPhoto(selectedPatient)" class="avatar-img" alt="Patient">
+              <span *ngIf="!getPatientPhoto(selectedPatient)">{{ getInitials(selectedPatient) }}</span>
+            </div>
+            <div class="hero-text">
+              <div class="hero-top">
+                <h2 class="hero-name">{{ selectedPatient.firstName }} {{ selectedPatient.lastName }}</h2>
+                <span class="hero-status-pill" [class]="getStatusClass(selectedPatient.patientStatus)">
+                  {{ selectedPatient.patientStatus || 'Suivi' }}
+                </span>
+              </div>
+              <p class="hero-meta">
+                {{ selectedPatient.email }}
+                <span class="hero-meta-divider">·</span>
+                ID: {{ selectedPatient.patientProfileId.substring(0,8) }}
+              </p>
+            </div>
+            <div class="detail-last-update" *ngIf="latestEntry">
+              <span class="pulse-dot"></span>
+              Dernière mise à jour {{ timeAgo(latestEntry.recordedAt) }}
+            </div>
+          </div>
+        </div>
+
+        <!-- No data -->
+        <div class="empty-detail" *ngIf="!latestEntry">
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          <p>Aucune donnée de suivi enregistrée pour ce patient. Les données apparaîtront dès la première saisie du tracker.</p>
+        </div>
+
+        <ng-container *ngIf="latestEntry">
+          <!-- ── Hero Row: Health Score + Risk ── -->
+          <div class="hero-row">
+            <div class="hero-gauge-card">
+              <div class="gauge-wrap">
+                <svg class="gauge-svg" viewBox="0 0 120 120">
+                  <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(22,21,69,0.04)" stroke-width="6"/>
+                  <circle class="gauge-arc" cx="60" cy="60" r="54" fill="none"
+                    [class]="getScoreClass(latestEntry.healthScore)"
+                    stroke-width="6" stroke-linecap="round"
+                    [attr.stroke-dasharray]="getScoreStroke(latestEntry.healthScore) + ' ' + (getScoreCircumference() - getScoreStroke(latestEntry.healthScore))"
+                    [attr.stroke-dashoffset]="getScoreCircumference() * 0.25"
+                    transform="rotate(-90 60 60)"/>
+                </svg>
+                <div class="gauge-center">
+                  <span class="gauge-value" [class]="getScoreClass(latestEntry.healthScore)">{{ latestEntry.healthScore }}</span>
+                  <span class="gauge-label">Score santé</span>
+                  <span class="gauge-sub" *ngIf="previousEntry">
+                    {{ latestEntry.healthScore > previousEntry.healthScore ? '↑' : latestEntry.healthScore < previousEntry.healthScore ? '↓' : '→' }}
+                    vs. précédent: {{ previousEntry.healthScore }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="hero-info-cards">
+              <div class="info-card risk-card" [class]="getRiskClass(latestEntry.riskLevel)">
+                <span class="info-card-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </span>
+                <div class="info-card-body">
+                  <span class="info-card-value">{{ getRiskLabel(latestEntry.riskLevel) }}</span>
+                  <span class="info-card-label">Niveau de risque</span>
+                </div>
+              </div>
+              <div class="info-card temp-card" [class.fever]="(latestEntry.temperature ?? 0) >= 38">
+                <span class="info-card-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
+                </span>
+                <div class="info-card-body">
+                  <span class="info-card-value">{{ latestEntry.temperature ? latestEntry.temperature + '°C' : '—' }}</span>
+                  <span class="info-card-label">Température</span>
+                </div>
+              </div>
+              <div class="info-card weight-card">
+                <span class="info-card-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 1 0 9 9"/><path d="M12 7v5l3 3"/></svg>
+                </span>
+                <div class="info-card-body">
+                  <span class="info-card-value">{{ latestEntry.weight ? latestEntry.weight + ' kg' : '—' }}</span>
+                  <span class="info-card-label">Poids</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Symptom Trend Chart (Static data — SVG) ── -->
+          <div class="chart-section" *ngIf="trackerHistory.length > 1">
+            <div class="chart-header">
+              <div>
+                <h3 class="chart-title">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                  Évolution des Indicateurs
+                </h3>
+                <span class="chart-subtitle">Tendance des symptômes sur les dernières entrées</span>
+              </div>
+            </div>
+            <div class="chart-body">
+              <div class="chart-area">
+                <!-- Y axis -->
+                <span class="chart-y-label" style="bottom:100%">10</span>
+                <span class="chart-y-label" style="bottom:50%">5</span>
+                <span class="chart-y-label" style="bottom:0">0</span>
+                <div class="chart-grid-line" style="bottom:75%"></div>
+                <div class="chart-grid-line" style="bottom:50%"></div>
+                <div class="chart-grid-line" style="bottom:25%"></div>
+
+                <svg class="chart-svg" viewBox="0 0 500 180" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="painGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e04668" stop-opacity="0.2"/><stop offset="100%" stop-color="#e04668" stop-opacity="0"/></linearGradient>
+                    <linearGradient id="fatigueGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e5953e" stop-opacity="0.2"/><stop offset="100%" stop-color="#e5953e" stop-opacity="0"/></linearGradient>
+                    <linearGradient id="moodGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#10b981" stop-opacity="0.2"/><stop offset="100%" stop-color="#10b981" stop-opacity="0"/></linearGradient>
+                  </defs>
+                  <!-- Pain line -->
+                  <path [attr.d]="painChartFillPath" fill="url(#painGrad)" class="chart-path-fill"/>
+                  <path [attr.d]="painChartLinePath" class="chart-path-line pain-line"/>
+                  <!-- Fatigue line -->
+                  <path [attr.d]="fatigueChartFillPath" fill="url(#fatigueGrad)" class="chart-path-fill"/>
+                  <path [attr.d]="fatigueChartLinePath" class="chart-path-line fatigue-line"/>
+                  <!-- Mood line -->
+                  <path [attr.d]="moodChartFillPath" fill="url(#moodGrad)" class="chart-path-fill"/>
+                  <path [attr.d]="moodChartLinePath" class="chart-path-line mood-line"/>
+                  <!-- Dots -->
+                  <g *ngFor="let pt of painChartPoints" class="chart-dot-group">
+                    <circle class="chart-dot-outer pain-dot" [attr.cx]="pt.x" [attr.cy]="pt.y"/>
+                  </g>
+                  <g *ngFor="let pt of fatigueChartPoints" class="chart-dot-group">
+                    <circle class="chart-dot-outer fatigue-dot" [attr.cx]="pt.x" [attr.cy]="pt.y"/>
+                  </g>
+                  <g *ngFor="let pt of moodChartPoints" class="chart-dot-group">
+                    <circle class="chart-dot-outer mood-dot" [attr.cx]="pt.x" [attr.cy]="pt.y"/>
+                  </g>
+                </svg>
+              </div>
+              <div class="chart-x-labels">
+                <span class="chart-x-label" *ngFor="let label of chartXLabels">{{ label }}</span>
+              </div>
+            </div>
+            <div class="chart-legend">
+              <div class="legend-item"><span class="legend-dot pain"></span> Douleur</div>
+              <div class="legend-item"><span class="legend-dot fatigue"></span> Fatigue</div>
+              <div class="legend-item"><span class="legend-dot mood"></span> Moral</div>
+            </div>
+          </div>
+
+          <!-- ── Vital Metrics Bars ── -->
+          <div class="metrics-section">
+            <h3 class="section-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              Indicateurs Vitaux
+            </h3>
+            <div class="metrics-grid">
+              <div class="metric-card">
+                <div class="metric-header">
+                  <span class="metric-name">Douleur</span>
+                  <span class="metric-trend" [class]="scoreClass(latestEntry.painLevel)">
+                    {{ latestEntry.painLevel ?? 0 }}/10
+                    <span class="trend-arrow" *ngIf="previousEntry">{{ getTrendIcon(latestEntry.painLevel, previousEntry.painLevel) }}</span>
+                  </span>
+                </div>
+                <div class="bar-track"><div class="bar-fill" [class]="scoreClass(latestEntry.painLevel)" [style.width]="getBarWidth(latestEntry.painLevel)"></div></div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-header">
+                  <span class="metric-name">Fatigue</span>
+                  <span class="metric-trend" [class]="scoreClass(latestEntry.fatigueLevel)">
+                    {{ latestEntry.fatigueLevel ?? 0 }}/10
+                    <span class="trend-arrow" *ngIf="previousEntry">{{ getTrendIcon(latestEntry.fatigueLevel, previousEntry.fatigueLevel) }}</span>
+                  </span>
+                </div>
+                <div class="bar-track"><div class="bar-fill" [class]="scoreClass(latestEntry.fatigueLevel)" [style.width]="getBarWidth(latestEntry.fatigueLevel)"></div></div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-header">
+                  <span class="metric-name">Moral</span>
+                  <span class="metric-trend" [class]="scoreClass(latestEntry.moodLevel, true)">
+                    {{ latestEntry.moodLevel ?? 0 }}/10
+                    <span class="trend-arrow" *ngIf="previousEntry">{{ getTrendIcon(latestEntry.moodLevel, previousEntry.moodLevel) }}</span>
+                  </span>
+                </div>
+                <div class="bar-track"><div class="bar-fill" [class]="scoreClass(latestEntry.moodLevel, true)" [style.width]="getBarWidth(latestEntry.moodLevel)"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Symptom Flags ── -->
+          <div class="symptoms-section">
+            <h3 class="section-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              Symptômes Déclarés
+            </h3>
+            <div class="symptom-flags" *ngIf="latestEntry.vomiting || latestEntry.diarrhea || latestEntry.appetiteLoss">
+              <span class="symptom-pill" *ngIf="latestEntry.vomiting">
+                <span class="pill-dot"></span>Vomissements
+              </span>
+              <span class="symptom-pill" *ngIf="latestEntry.diarrhea">
+                <span class="pill-dot"></span>Diarrhée
+              </span>
+              <span class="symptom-pill" *ngIf="latestEntry.appetiteLoss">
+                <span class="pill-dot"></span>Perte d'appétit
+              </span>
+            </div>
+            <div class="no-symptoms" *ngIf="!latestEntry.vomiting && !latestEntry.diarrhea && !latestEntry.appetiteLoss">
+              <span class="no-symptoms-dot"></span>
+              Aucun symptôme significatif déclaré — État satisfaisant
+            </div>
+          </div>
+
+          <!-- ── Notes ── -->
+          <div class="notes-card" *ngIf="latestEntry.notes">
+            <h3 class="section-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              Notes du Patient
+            </h3>
+            <p class="notes-text">{{ latestEntry.notes }}</p>
+          </div>
+
+          <!-- ── History Table ── -->
+          <div class="history-section" *ngIf="trackerHistory.length > 1">
+            <h3 class="section-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Historique des Entrées ({{ trackerHistory.length }})
+            </h3>
+            <div class="history-table-wrap">
+              <div class="history-row header">
+                <span>Date</span><span>Douleur</span><span>Fatigue</span><span>Moral</span><span>Temp.</span><span>Poids</span><span>Score</span><span>Risque</span>
+              </div>
+              <div class="history-row" *ngFor="let e of trackerHistory; let i = index"
+                   [style.animation-delay]="(i * 0.03) + 's'">
+                <span class="date-cell">{{ formatDateShort(e.recordedAt) }}</span>
+                <span [class]="scoreClass(e.painLevel)">{{ e.painLevel ?? 0 }}</span>
+                <span [class]="scoreClass(e.fatigueLevel)">{{ e.fatigueLevel ?? 0 }}</span>
+                <span [class]="scoreClass(e.moodLevel, true)">{{ e.moodLevel ?? 0 }}</span>
+                <span [class.fever]="(e.temperature ?? 0) >= 38">{{ e.temperature ? e.temperature + '°' : '—' }}</span>
+                <span>{{ e.weight ? e.weight + 'kg' : '—' }}</span>
+                <span class="score-cell" [class]="getScoreClass(e.healthScore)">{{ e.healthScore }}</span>
+                <span class="risk-cell" [class]="getRiskClass(e.riskLevel)">{{ getRiskLabel(e.riskLevel) }}</span>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+
+      <!-- Loading tracker data -->
+      <div class="detail-area loading-detail" *ngIf="selectedPatient && loadingTracker">
+        <div class="loading-ring">
+          <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="none" stroke-width="3" stroke="url(#lg2)" stroke-dasharray="80 50" stroke-linecap="round"/><defs><linearGradient id="lg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#a95e92"/><stop offset="100%" stop-color="#ebaece"/></linearGradient></defs></svg>
+        </div>
+        <span class="loading-text">Chargement des données cliniques…</span>
+      </div>
+
+      <!-- ═══ PREMIUM HERO — No Selection ═══ -->
+      <div class="detail-area" *ngIf="!selectedPatient && !loading">
+        <div class="tracker-hero">
+          <div class="tracker-hero-grid-bg"></div>
+          <div class="tracker-hero-glow tracker-hero-glow--1"></div>
+          <div class="tracker-hero-glow tracker-hero-glow--2"></div>
+
+          <div class="tracker-hero-content">
+            <span class="tracker-hero-eyebrow">📊 Monitoring Clinique</span>
+            <h2 class="tracker-hero-title">Suivi des<br/><span class="tracker-hero-grad">Symptômes & Indicateurs</span></h2>
+            <p class="tracker-hero-desc">
+              Visualisez en temps réel l'évolution clinique de vos patients.
+              Suivez la douleur, la fatigue, le moral et les indicateurs vitaux grâce à des graphiques interactifs et des alertes de risque personnalisées.
+            </p>
+          </div>
+
+          <div class="tracker-hero-features">
+            <div class="thf-card thf-score">
+              <div class="thf-icon">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              </div>
+              <h4>Score de Santé</h4>
+              <p>Jauge dynamique calculée à partir de tous les indicateurs vitaux du patient</p>
+            </div>
+            <div class="thf-card thf-trends">
+              <div class="thf-icon">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20 L8 14 L14 16 L22 4"/><circle cx="8" cy="14" r="1.5"/><circle cx="14" cy="16" r="1.5"/></svg>
+              </div>
+              <h4>Courbes de Tendance</h4>
+              <p>Graphiques SVG douleur · fatigue · moral sur les dernières entrées</p>
+            </div>
+            <div class="thf-card thf-alerts">
+              <div class="thf-icon">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <h4>Alertes de Risque</h4>
+              <p>Détection automatique des niveaux critiques et signaux d'alerte cliniques</p>
+            </div>
+          </div>
+
+          <p class="tracker-hero-hint">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            Sélectionnez un patient ci-dessus pour consulter son suivi clinique complet
+          </p>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>

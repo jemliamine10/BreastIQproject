@@ -1,0 +1,184 @@
+<!-- ═══ Mobile hamburger ═══ -->
+<button class="mobile-toggle" (click)="toggleMobile()" aria-label="Ouvrir le menu">
+  <span class="hamburger" [class.open]="mobileOpen">
+    <span></span><span></span><span></span>
+  </span>
+</button>
+
+<!-- ═══ Overlay ═══ -->
+<div class="overlay" [class.visible]="mobileOpen" (click)="closeMobile()"></div>
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="sidebar" [class.open]="mobileOpen" [class.compact]="collapsed" aria-label="Navigation docteur">
+
+  <!-- ╔═══════════════════════════════╗
+       ║  BLOCK 1 — HEADER (fixed)    ║
+       ╚═══════════════════════════════╝ -->
+  <div class="sidebar-header">
+
+    <!-- Brand row -->
+    <div class="sidebar-brand">
+      <div class="brand-icon">
+        <img src="assets/logoBreastCancersite.png" alt="BreastIQ" class="brand-img" />
+      </div>
+      <div class="brand-text" [class.sr-only]="collapsed">
+        <span class="brand-sub">ESPACE DOCTEUR <span class="brand-pro">PRO</span></span>
+      </div>
+    </div>
+
+    <!-- Collapse toggle -->
+    <button class="collapse-btn" (click)="toggleCollapse()" [attr.aria-label]="collapsed ? 'Étendre' : 'Réduire'">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        @if (collapsed) {
+          <path d="M13 17l5-5-5-5"/><path d="M6 17l5-5-5-5"/>
+        } @else {
+          <path d="M11 17l-5-5 5-5"/><path d="M18 17l-5-5 5-5"/>
+        }
+      </svg>
+    </button>
+
+    <!-- Profile card -->
+    <a class="profile-card" routerLink="/doctor/profile" routerLinkActive="profile-active" (click)="closeMobile()">
+      <div class="avatar">
+        @if (profilePhotoUrl) {
+          <img [src]="profilePhotoUrl" alt="{{ userName }}" class="avatar-img" />
+        } @else {
+          <span class="avatar-letter">{{ userInitials }}</span>
+        }
+        <span class="avatar-dot"></span>
+      </div>
+      <div class="profile-text" [class.sr-only]="collapsed">
+        <span class="profile-name">{{ userName }}</span>
+        <span class="profile-email">{{ userEmail }}</span>
+        <span class="profile-pill">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+          Médecin vérifié
+        </span>
+      </div>
+    </a>
+
+    <!-- Progress -->
+    <div class="progress-wrap" [class.sr-only]="collapsed">
+      <div class="progress-row">
+        <span class="progress-label">Profil complété</span>
+        <span class="progress-pct">{{ profileCompletion }}%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-bar" [style.width.%]="profileCompletion">
+          <span class="shimmer"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ╔═══════════════════════════════╗
+       ║  BLOCK 2 — NAV (scrollable)  ║
+       ╚═══════════════════════════════╝ -->
+  <nav class="nav-body" aria-label="Menu principal">
+    @for (group of navGroups; track group.key) {
+      <div class="nav-section">
+        <!-- Section header -->
+        <button class="section-head" (click)="toggleGroup(group)" [attr.aria-expanded]="!group.collapsed">
+          <span class="section-pill" [class.sr-only]="collapsed">{{ group.title }}</span>
+          <svg class="section-chevron" [class.flipped]="group.collapsed" [class.sr-only]="collapsed" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 9l6 6 6-6"/>
+          </svg>
+        </button>
+
+        <!-- Items -->
+        <div class="section-items" [class.collapsed-items]="group.collapsed && !collapsed">
+          @for (item of group.items; track item.route) {
+            <a class="nav-link"
+               [routerLink]="item.route"
+               routerLinkActive="is-active"
+               [routerLinkActiveOptions]="{exact: item.route === '/doctor/dashboard'}"
+               (click)="closeMobile()"
+               [attr.title]="collapsed ? item.label : null">
+
+              <span class="link-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  @for (p of parsePaths(item.icon); track $index) {
+                    <path [attr.d]="p"/>
+                  }
+                </svg>
+              </span>
+
+              <span class="link-text" [class.sr-only]="collapsed">{{ item.label }}</span>
+
+              @if (item.badge) {
+                <span class="link-badge">{{ item.badge }}</span>
+              }
+              @if (item.accent === 'ai') {
+                <span class="link-ai" [class.sr-only]="collapsed">AI</span>
+              }
+
+              <span class="active-mark"></span>
+
+              @if (collapsed) {
+                <span class="tip">{{ item.label }}</span>
+              }
+            </a>
+          }
+        </div>
+      </div>
+    }
+  </nav>
+
+  <!-- ╔═══════════════════════════════╗
+       ║  BLOCK 3 — FOOTER (fixed)    ║
+       ╚═══════════════════════════════╝ -->
+  <div class="sidebar-bottom">
+    <div class="bottom-sep"></div>
+
+    <!-- Next appointment mini-card -->
+    @if (nextAppointment) {
+      <a class="rdv-card" routerLink="/doctor/schedule" (click)="closeMobile()" [class.sr-only]="collapsed">
+        <div class="rdv-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2z"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>
+          </svg>
+        </div>
+        <div class="rdv-content">
+          <span class="rdv-label">Prochain RDV</span>
+          <span class="rdv-date">{{ nextRdvDate }}</span>
+          <span class="rdv-sub">{{ nextRdvSub }}</span>
+        </div>
+        <span class="rdv-status" [class]="getStatusClass(nextAppointment.status)">
+          {{ getStatusLabel(nextAppointment.status) }}
+        </span>
+      </a>
+    } @else {
+      <div class="rdv-card empty" [class.sr-only]="collapsed">
+        <div class="rdv-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2z"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>
+          </svg>
+        </div>
+        <div class="rdv-content">
+          <span class="rdv-label">Prochain RDV</span>
+          <span class="rdv-date">Aucun RDV à venir</span>
+          <span class="rdv-sub">Calendrier disponible</span>
+        </div>
+      </div>
+    }
+
+    <!-- Quick help / Settings -->
+    <a class="quick-card" routerLink="/doctor/profile" (click)="closeMobile()" [class.sr-only]="collapsed">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+      </svg>
+      <span>Paramètres</span>
+    </a>
+
+    <!-- Logout -->
+    <button class="logout-btn" (click)="logout()" [attr.title]="collapsed ? 'Déconnexion' : null">
+      <span class="link-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>
+        </svg>
+      </span>
+      <span class="link-text" [class.sr-only]="collapsed">Déconnexion</span>
+      @if (collapsed) { <span class="tip">Déconnexion</span> }
+    </button>
+  </div>
+</aside>

@@ -1,0 +1,47 @@
+<div class="selection-page">
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="grid-pattern"></div>
+
+  <div class="center-container">
+    <div class="header-section">
+      <a routerLink="/" class="logo">
+        <img src="assets/logoBreastCancersite.png" alt="BreastIQ" class="logo-img" />
+      </a>
+      <h1>Bienvenue sur BreastIQ</h1>
+      <p>Choisissez votre espace pour commencer</p>
+    </div>
+
+    <div class="cards-container">
+      <a routerLink="/public/register-patient" class="role-card patient-card">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
+        </div>
+        <div class="card-content">
+          <h2>Patient(e)</h2>
+          <p>Je souhaite suivre mon parcours de soin et accéder à mes analyses.</p>
+          <span class="btn-arrow">Commencer →</span>
+        </div>
+      </a>
+
+      <a routerLink="/public/register-doctor" class="role-card doctor-card">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+        </div>
+        <div class="card-content">
+          <h2>Médecin</h2>
+          <p>Je suis un professionnel de santé et je veux utiliser les outils IA.</p>
+          <span class="btn-arrow">Commencer →</span>
+        </div>
+      </a>
+    </div>
+
+    <div class="footer-link">
+      Déjà un compte ? <a routerLink="/public/login">Se connecter</a>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,567 @@
+﻿[33mΓ¥»[39m Building...
+[32mΓ£ö[39m Building...
+[1mInitial chunk files[22m[2m | [22m[1mNames[22m        [2m | [22m[1mRaw size[22m
+[32mmain.js[39m            [2m | [22m[2mmain[22m         [2m | [22m [36m4.80 MB[39m[2m | [22m
+[32mpolyfills.js[39m       [2m | [22m[2mpolyfills[22m    [2m | [22m[36m89.77 kB[39m[2m | [22m
+[32mstyles.css[39m         [2m | [22m[2mstyles[22m       [2m | [22m [36m1.26 kB[39m[2m | [22m
+
+[1m [22m                  [2m | [22m[1mInitial total[22m[2m | [22m [1m4.89 MB[22m
+
+Application bundle generation complete. [5.343 seconds]
+
+node.exe : 
+[1m[33m[33mΓû▓ [43;33m[
+[43;30mWARNING[43;33m][0
+m [1mNG8107: The left 
+side of this optional 
+chain operation does not 
+include 'null' or 
+'undefined' in its type, 
+therefore the '?.' 
+operator can be replaced 
+with the '.' operator.[0m 
+[1m[35m[plugin 
+angular-compiler][0m
+Au caractère C:\Users\PC\De
+sktop\IOT\npx.ps1:29 : 3
++   & $NODE_EXE 
+$NPX_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~
+    + CategoryInfo         
+     : NotSpecified: ([1  
+  m[33m[33mΓ...r-compi   
+ ler][0m:String) [], R    
+emoteException
+    + FullyQualifiedErrorI 
+   d : NativeCommandError
+ 
+
+    src/app/doctor/dashboar
+d/dashboard.component.html:
+226:36:
+[37m      226 Γöé ...     
+ <td>{{ p.cancerStage?.[32
+mreplace[37m('STAGE_', 
+'Stade ') || 'No...
+          Γò╡              
+                  
+[32m~~~~~~~[0m
+
+  Error occurs in the 
+template of component 
+DashboardComponent.
+
+    src/app/doctor/dashboar
+d/dashboard.component.ts:18
+:15:
+[37m      18 Γöé   
+templateUrl: [32m'./dashbo
+ard.component.html'[37m,
+         Γò╡               
+ [32m~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~[0m
+
+
+[33mΓû▓ [43;33m[[43;30mW
+ARNING[43;33m][0m 
+[1mNG8107: The left side 
+of this optional chain 
+operation does not include 
+'null' or 'undefined' in 
+its type, therefore the 
+'?.' operator can be 
+replaced with the '.' 
+operator.[0m 
+[1m[35m[plugin 
+angular-compiler][0m
+
+    src/app/doctor/imaging/
+imaging.component.html:192:
+51:
+[37m      192 Γöé ...   
+<span 
+class="verdict-value">{{ re
+sult?.[32mglobalVerdict[3
+7m }}</span>
+          Γò╡              
+                           
+     [32m~~~~~~~~~~~~~[0m
+
+  Error occurs in the 
+template of component 
+ImagingComponent.
+
+    src/app/doctor/imaging/
+imaging.component.ts:14:15:
+[37m      14 Γöé   
+templateUrl: [32m'./imagin
+g.component.html'[37m,
+         Γò╡               
+ [32m~~~~~~~~~~~~~~~~~~~~~
+~~~~~[0m
+
+
+[33mΓû▓ [43;33m[[43;30mW
+ARNING[43;33m][0m 
+[1mNG8107: The left side 
+of this optional chain 
+operation does not include 
+'null' or 'undefined' in 
+its type, therefore the 
+'?.' operator can be 
+replaced with the '.' 
+operator.[0m 
+[1m[35m[plugin 
+angular-compiler][0m
+
+    src/app/doctor/imaging/
+imaging.component.html:212:
+50:
+[37m      212 Γöé 
+...stat-num">{{ result?.[3
+2mindividualPredictions[37
+m?.length || 0 }}</span>
+          Γò╡              
+           [32m~~~~~~~~~~~
+~~~~~~~~~~[0m
+
+  Error occurs in the 
+template of component 
+ImagingComponent.
+
+    src/app/doctor/imaging/
+imaging.component.ts:14:15:
+[37m      14 Γöé   
+templateUrl: [32m'./imagin
+g.component.html'[37m,
+         Γò╡               
+ [32m~~~~~~~~~~~~~~~~~~~~~
+~~~~~[0m
+
+
+[33mΓû▓ [43;33m[[43;30mW
+ARNING[43;33m][0m 
+[1mNG8107: The left side 
+of this optional chain 
+operation does not include 
+'null' or 'undefined' in 
+its type, therefore the 
+'?.' operator can be 
+replaced with the '.' 
+operator.[0m 
+[1m[35m[plugin 
+angular-compiler][0m
+
+    src/app/doctor/imaging/
+imaging.component.html:213:
+53:
+[37m      213 Γöé 
+...t-label">{{ (result?.[3
+2mindividualPredictions[37
+m?.length || 0) > 1 ?...
+          Γò╡              
+           [32m~~~~~~~~~~~
+~~~~~~~~~~[0m
+
+  Error occurs in the 
+template of component 
+ImagingComponent.
+
+    src/app/doctor/imaging/
+imaging.component.ts:14:15:
+[37m      14 Γöé   
+templateUrl: [32m'./imagin
+g.component.html'[37m,
+         Γò╡               
+ [32m~~~~~~~~~~~~~~~~~~~~~
+~~~~~[0m
+
+
+[33mΓû▓ [43;33m[[43;30mW
+ARNING[43;33m][0m 
+[1mNG8107: The left side 
+of this optional chain 
+operation does not include 
+'null' or 'undefined' in 
+its type, therefore the 
+'?.' operator can be 
+replaced with the '.' 
+operator.[0m 
+[1m[35m[plugin 
+angular-compiler][0m
+
+    src/app/doctor/imaging/
+imaging.component.html:240:
+55:
+[37m      240 Γöé         
+    @if (activeView === 
+'annotated' && result?.[32
+mfullImage[37m) {
+          Γò╡              
+                           
+               
+[32m~~~~~~~~~[0m
+
+  Error occurs in the 
+template of component 
+ImagingComponent.
+
+    src/app/doctor/imaging/
+imaging.component.ts:14:15:
+[37m      14 Γöé   
+templateUrl: [32m'./imagin
+g.component.html'[37m,
+         Γò╡               
+ [32m~~~~~~~~~~~~~~~~~~~~~
+~~~~~[0m
+
+
+[33mΓû▓ [43;33m[[43;30mW
+ARNING[43;33m][0m 
+[1mNG8107: The left side 
+of this optional chain 
+operation does not include 
+'null' or 'undefined' in 
+its type, therefore the 
+'?.' operator can be 
+replaced with the '.' 
+operator.[0m 
+[1m[35m[plugin 
+angular-compiler][0m
+
+    src/app/doctor/imaging/
+imaging.component.html:241:
+62:
+[37m      241 Γöé 
+...ge/jpeg;base64,' + resul
+t?.[32mfullImage[37m" 
+alt="Mammographie 
+annot∩┐╜...
+          Γò╡              
+                 
+[32m~~~~~~~~~[0m
+
+  Error occurs in the 
+template of component 
+ImagingComponent.
+
+    src/app/doctor/imaging/
+imaging.component.ts:14:15:
+[37m      14 Γöé   
+templateUrl: [32m'./imagin
+g.component.html'[37m,
+         Γò╡               
+ [32m~~~~~~~~~~~~~~~~~~~~~
+~~~~~[0m
+
+
+[33mΓû▓ [43;33m[[43;30mW
+ARNING[43;33m][0m 
+[1mNG8107: The left side 
+of this optional chain 
+operation does not include 
+'null' or 'undefined' in 
+its type, therefore the 
+'?.' operator can be 
+replaced with the '.' 
+operator.[0m 
+[1m[35m[plugin 
+angular-compiler][0m
+
+    src/app/doctor/imaging/
+imaging.component.html:242:
+65:
+[37m      242 Γöé ...if 
+(activeView === 
+'segmentation' && result?.
+[32msegmentationImage[37m)
+ {
+          Γò╡              
+                           
+        
+[32m~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the 
+template of component 
+ImagingComponent.
+
+    src/app/doctor/imaging/
+imaging.component.ts:14:15:
+[37m      14 Γöé   
+templateUrl: [32m'./imagin
+g.component.html'[37m,
+         Γò╡               
+ [32m~~~~~~~~~~~~~~~~~~~~~
+~~~~~[0m
+
+
+[33mΓû▓ [43;33m[[43;30mW
+ARNING[43;33m][0m 
+[1mNG8107: The left side 
+of this optional chain 
+operation does not include 
+'null' or 'undefined' in 
+its type, therefore the 
+'?.' operator can be 
+replaced with the '.' 
+operator.[0m 
+[1m[35m[plugin 
+angular-compiler][0m
+
+    src/app/doctor/imaging/
+imaging.component.html:243:
+62:
+[37m      243 Γöé 
+...peg;base64,' + result?.
+[32msegmentationImage[37m"
+ alt="Segmentation" c...
+          Γò╡              
+             
+[32m~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the 
+template of component 
+ImagingComponent.
+
+    src/app/doctor/imaging/
+imaging.component.ts:14:15:
+[37m      14 Γöé   
+templateUrl: [32m'./imagin
+g.component.html'[37m,
+         Γò╡               
+ [32m~~~~~~~~~~~~~~~~~~~~~
+~~~~~[0m
+
+
+[33mΓû▓ [43;33m[[43;30mW
+ARNING[43;33m][0m 
+[1mNG8107: The left side 
+of this optional chain 
+operation does not include 
+'null' or 'undefined' in 
+its type, therefore the 
+'?.' operator can be 
+replaced with the '.' 
+operator.[0m 
+[1m[35m[plugin 
+angular-compiler][0m
+
+    src/app/doctor/imaging/
+imaging.component.html:244:
+61:
+[37m      244 Γöé 
+...@else if (activeView 
+=== 'original' && result?.
+[32mfullNormalImage[37m) {
+          Γò╡              
+                           
+          
+[32m~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the 
+template of component 
+ImagingComponent.
+
+    src/app/doctor/imaging/
+imaging.component.ts:14:15:
+[37m      14 Γöé   
+templateUrl: [32m'./imagin
+g.component.html'[37m,
+         Γò╡               
+ [32m~~~~~~~~~~~~~~~~~~~~~
+~~~~~[0m
+
+
+[33mΓû▓ [43;33m[[43;30mW
+ARNING[43;33m][0m 
+[1mNG8107: The left side 
+of this optional chain 
+operation does not include 
+'null' or 'undefined' in 
+its type, therefore the 
+'?.' operator can be 
+replaced with the '.' 
+operator.[0m 
+[1m[35m[plugin 
+angular-compiler][0m
+
+    src/app/doctor/imaging/
+imaging.component.html:245:
+62:
+[37m      245 Γöé 
+...jpeg;base64,' + result?.
+[32mfullNormalImage[37m" 
+alt="Mammographie ori...
+          Γò╡              
+              
+[32m~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the 
+template of component 
+ImagingComponent.
+
+    src/app/doctor/imaging/
+imaging.component.ts:14:15:
+[37m      14 Γöé   
+templateUrl: [32m'./imagin
+g.component.html'[37m,
+         Γò╡               
+ [32m~~~~~~~~~~~~~~~~~~~~~
+~~~~~[0m
+
+
+[33mΓû▓ [43;33m[[43;30mW
+ARNING[43;33m][0m 
+[1mNG8107: The left side 
+of this optional chain 
+operation does not include 
+'null' or 'undefined' in 
+its type, therefore the 
+'?.' operator can be 
+replaced with the '.' 
+operator.[0m 
+[1m[35m[plugin 
+angular-compiler][0m
+
+    src/app/doctor/imaging/
+imaging.component.html:253:
+24:
+[37m      253 Γöé         
+  @if (!result?.[32mdetect
+ions[37m) {
+          Γò╡              
+           
+[32m~~~~~~~~~~[0m
+
+  Error occurs in the 
+template of component 
+ImagingComponent.
+
+    src/app/doctor/imaging/
+imaging.component.ts:14:15:
+Output location: C:\SiteBreastCancerFinale\breastcancerFrontend\dist\front-app
+
+[37m      14 Γöé   
+templateUrl: [32m'./imagin
+g.component.html'[37m,
+         Γò╡               
+ [32m~~~~~~~~~~~~~~~~~~~~~
+~~~~~[0m
+
+
+[33mΓû▓ [43;33m[[43;30mW
+ARNING[43;33m][0m 
+[1mNG8107: The left side 
+of this optional chain 
+operation does not include 
+'null' or 'undefined' in 
+its type, therefore the 
+'?.' operator can be 
+replaced with the '.' 
+operator.[0m 
+[1m[35m[plugin 
+angular-compiler][0m
+
+    src/app/doctor/imaging/
+imaging.component.html:268:
+36:
+[37m      268 Γöé ...     
+@for (pred of result?.[32m
+individualPredictions[37m;
+ track $index) {
+          Γò╡              
+                 [32m~~~~~
+~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the 
+template of component 
+ImagingComponent.
+
+    src/app/doctor/imaging/
+imaging.component.ts:14:15:
+[37m      14 Γöé   
+templateUrl: [32m'./imagin
+g.component.html'[37m,
+         Γò╡               
+ [32m~~~~~~~~~~~~~~~~~~~~~
+~~~~~[0m
+
+
+[33mΓû▓ [43;33m[[43;30mW
+ARNING[43;33m][0m 
+[1mNG8107: The left side 
+of this optional chain 
+operation does not include 
+'null' or 'undefined' in 
+its type, therefore the 
+'?.' operator can be 
+safely removed.[0m 
+[1m[35m[plugin 
+angular-compiler][0m
+
+    src/app/patient/dashboa
+rd/dashboard.component.html
+:112:15:
+[37m      112 Γöé ...     
+   {{ [32mdata.nextAppoint
+ment.doctorFirstName?.[0][
+37m }}{{ data...
+          Γò╡              
+ [32m~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the 
+template of component 
+DashboardComponent.
+
+    src/app/patient/dashboa
+rd/dashboard.component.ts:1
+8:15:
+[37m      18 Γöé   
+templateUrl: [32m'./dashbo
+ard.component.html'[37m,
+         Γò╡               
+ [32m~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~[0m
+
+
+[33mΓû▓ [43;33m[[43;30mW
+ARNING[43;33m][0m 
+[1mNG8107: The left side 
+of this optional chain 
+operation does not include 
+'null' or 'undefined' in 
+its type, therefore the 
+'?.' operator can be 
+safely removed.[0m 
+[1m[35m[plugin 
+angular-compiler][0m
+
+    src/app/patient/dashboa
+rd/dashboard.component.html
+:112:62:
+[37m      112 Γöé 
+...orFirstName?.[0] }}{{ [
+32mdata.nextAppointment.doc
+torLastName?.[0][37m }}
+          Γò╡              
+            [32m~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~[0m
+
+  Error occurs in the 
+template of component 
+DashboardComponent.
+
+    src/app/patient/dashboa
+rd/dashboard.component.ts:1
+8:15:
+[37m      18 Γöé   
+templateUrl: [32m'./dashbo
+ard.component.html'[37m,
+         Γò╡               
+ [32m~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~[0m
+
+[39m[22m

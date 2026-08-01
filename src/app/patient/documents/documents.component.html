@@ -1,0 +1,450 @@
+<!-- ═══════════════════════════════════════════════════════════
+     DOCUMENTS MÉDICAUX — ULTRA PREMIUM STATIC
+     ═══════════════════════════════════════════════════════════ -->
+<div class="docs-page">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
+
+    <!-- Clinical Hero Selection Part (Premium Selection) -->
+    <section class="docs-hero">
+        <div class="hero-top-row">
+            <div class="patient-hero-card glass-card">
+                <div class="hero-avatar-wrapper">
+                    <div class="hero-avatar" [class.no-photo]="!selectedFilterDoctorPhoto">
+                        <img *ngIf="selectedFilterDoctorPhoto" [src]="selectedFilterDoctorPhoto" alt="Doctor Avatar" />
+                        <span *ngIf="!selectedFilterDoctorPhoto">{{ (selectedFilterDoctorData?.name || 'M') | slice:0:1 }}</span>
+                    </div>
+                </div>
+                <div class="hero-identity">
+                    <h1 class="hero-name">{{ selectedFilterDoctorData?.name || 'Toute l\'équipe' }}</h1>
+                    <div class="hero-subtext">
+                        <span class="mrn-pill">{{ selectedFilterDoctorData?.speciality || 'Mon équipe médicale' }}</span>
+                        <span class="dot-separator"></span>
+                        <span class="record-info">Dossier Partagé</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hero-actions-card glass-card">
+                <div class="controls-group">
+                    <div class="premium-select-wrap">
+                        <label class="control-label">Filtrer par médecin</label>
+                        <select class="premium-select" [(ngModel)]="selectedFilterDoctorId">
+                            <option value="all">Tous les intervenants</option>
+                            <option *ngFor="let d of linkedDoctors" [value]="d.id">{{ d.name }}</option>
+                        </select>
+                    </div>
+
+                    <div class="premium-search-wrap">
+                        <label class="control-label">Recherche rapide</label>
+                        <div class="search-input-box">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            <input type="text" [(ngModel)]="searchQuery" placeholder="Nom, type, mot-clé..." />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn-premium-upload" (click)="openUploadModal()">
+                        <div class="btn-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        </div>
+                        <span>Ajouter un document</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PREMIUM ORIGIN TOGGLE (Sent vs Received) -->
+    <div class="origin-toggle-bar">
+        <div class="toggle-track">
+            <button class="toggle-btn" [class.active]="viewMode === 'all'" (click)="viewMode = 'all'">
+                <div class="btn-content">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 3v18"/><path d="M12 3v18"/><path d="M17 3v18"/><path d="M3 7h18"/><path d="M3 12h18"/><path d="M3 17h18"/></svg>
+                    <span>Tous</span>
+                </div>
+                <div class="toggle-badge">{{ documents.length }}</div>
+            </button>
+            <button class="toggle-btn received" [class.active]="viewMode === 'received'" (click)="viewMode = 'received'">
+                <div class="btn-content">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    <span>Reçus du médecin</span>
+                </div>
+                <div class="toggle-badge">{{ receivedCount }}</div>
+            </button>
+            <button class="toggle-btn sent" [class.active]="viewMode === 'sent'" (click)="viewMode = 'sent'">
+                <div class="btn-content">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <span>Mes envois</span>
+                </div>
+                <div class="toggle-badge">{{ sentCount }}</div>
+            </button>
+            <div class="active-slider" [class.pos-all]="viewMode === 'all'" [class.pos-received]="viewMode === 'received'" [class.pos-sent]="viewMode === 'sent'"></div>
+        </div>
+    </div>
+
+    @if (actionMessage) {
+    <div class="action-banner">{{ actionMessage }}</div>
+    }
+
+    <!-- KPI CARDS -->
+    <section class="kpi-row">
+        <article class="kpi-card">
+            <div class="kpi-icon" style="background:linear-gradient(135deg,#10b981,#34d399)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                    <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+            </div>
+            <div class="kpi-body"><span class="kpi-label">Validés</span><span class="kpi-value">{{ validatedCount
+                    }}</span><span class="kpi-sub">Documents certifiés</span></div>
+        </article>
+        <article class="kpi-card">
+            <div class="kpi-icon" style="background:linear-gradient(135deg,#e5953e,#f0b86a)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+            </div>
+            <div class="kpi-body"><span class="kpi-label">En attente</span><span class="kpi-value">{{ pendingCount
+                    }}</span><span class="kpi-sub">À valider</span></div>
+        </article>
+        <article class="kpi-card">
+            <div class="kpi-icon" style="background:linear-gradient(135deg,#a95e92,#b8669f)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                </svg>
+            </div>
+            <div class="kpi-body"><span class="kpi-label">Total</span><span class="kpi-value">{{ documents.length
+                    }}</span><span class="kpi-sub">Dossier complet</span></div>
+        </article>
+        <article class="kpi-card">
+            <div class="kpi-icon" style="background:linear-gradient(135deg,#7c6cc4,#9b8ce6)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path
+                        d="M2 7l4.41-4.41A2 2 0 017.83 2h8.34a2 2 0 011.42.59L22 7 M4 7v13a2 2 0 002 2h12a2 2 0 002-2V7" />
+                </svg>
+            </div>
+            <div class="kpi-body"><span class="kpi-label">Imageries</span><span class="kpi-value">{{
+                    imagerieCount }}</span><span class="kpi-sub">Radios &
+                    IRM</span></div>
+        </article>
+    </section>
+
+    <!-- CATEGORY FILTERS -->
+    <nav class="cat-nav">
+        @for (cat of categories; track cat.value) {
+        <button class="cat-btn" [class.active]="filterCategory === cat.value" (click)="filterCategory = cat.value"
+            type="button">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                @for (p of parsePaths(cat.icon); track $index) {
+                <path [attr.d]="p" /> }
+            </svg>
+            {{ cat.label }}
+            <span class="cat-count">{{ getCategoryCount(cat.value) }}</span>
+        </button>
+        }
+    </nav>
+
+
+    <!-- DOCUMENTS GRID -->
+    @if (loading) {
+    <div class="state-card">Chargement des documents...</div>
+    } @else if (errorMessage) {
+    <div class="state-card error">
+        <p>{{ errorMessage }}</p>
+        <button class="btn-cancel" (click)="retryLoad()" type="button">Réessayer</button>
+    </div>
+    } @else if (filteredDocs.length > 0) {
+    <div class="docs-grid">
+        @for (doc of filteredDocs; track doc.id; let i = $index) {
+        <article class="doc-card" [class]="doc.status" [class.variant-sent]="doc.uploadedBy === 'patient'" [class.variant-received]="doc.uploadedBy === 'doctor'" [style.animation-delay]="(i*0.06)+'s'">
+            <div class="doc-card-top">
+                <div class="doc-origin-indicator" [class]="doc.uploadedBy">
+                    <div class="origin-icon">
+                        <svg *ngIf="doc.uploadedBy === 'doctor'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        <svg *ngIf="doc.uploadedBy === 'patient'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    </div>
+                </div>
+                <div class="doc-icon-wrap" [class]="getCategoryClass(doc.category)">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                    </svg>
+                </div>
+                <span class="doc-status-badge" [class]="doc.status">{{ getStatusLabel(doc.status) }}</span>
+            </div>
+            <div class="doc-card-body">
+                <h4 class="doc-name">{{ doc.name }}</h4>
+                <div class="doc-meta">
+                    <span class="doc-cat-badge" [class]="getCategoryClass(doc.category)">{{
+                        getCategoryLabel(doc.category) }}</span>
+                    @if (doc.uploadedBy === 'patient') {
+                        <span class="doc-source-badge sent">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg> Envoyé
+                        </span>
+                    } @else {
+                        <span class="doc-source-badge received">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg> Reçu
+                        </span>
+                    }
+                </div>
+                <div class="doc-info-row">
+                    <div class="doc-info-item">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <rect x="3" y="4" width="18" height="18" rx="2" />
+                            <line x1="16" y1="2" x2="16" y2="6" />
+                            <line x1="8" y1="2" x2="8" y2="6" />
+                            <line x1="3" y1="10" x2="21" y2="10" />
+                        </svg>
+                        {{ formatDate(doc.date) }}
+                    </div>
+                    <div class="doc-info-item">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                        </svg>
+                        {{ doc.doctor }}
+                    </div>
+                    <div class="doc-info-item">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                        </svg>
+                        {{ doc.size }}@if (doc.pages) { · {{ doc.pages }} p. }
+                    </div>
+                </div>
+            </div>
+            <div class="doc-card-footer">
+                <button class="btn-doc-view" (click)="openDocument(doc)" type="button">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    Voir
+                </button>
+                <button class="btn-doc-dl" (click)="downloadDocument(doc)" type="button">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                    Télécharger
+                </button>
+            </div>
+        </article>
+        }
+    </div>
+
+    @if (totalPages > 1) {
+    <div class="pagination-bar">
+        <button class="page-btn" [disabled]="!canPreviousPage" (click)="previousPage()" type="button">Précédent</button>
+        @for (p of pages(); track p) {
+        <button class="page-btn" [class.active]="p === page" (click)="goToPage(p)" type="button">{{ p + 1 }}</button>
+        }
+        <button class="page-btn" [disabled]="!canNextPage" (click)="nextPage()" type="button">Suivant</button>
+    </div>
+    }
+    } @else {
+    <div class="empty-state">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+            <path d="M14 2H6a2 2 0 00-2 2v16h16V8z" />
+            <polyline points="14 2 14 8 20 8" />
+        </svg>
+        <p>Aucun document trouvé</p>
+        <span>Essayez une autre recherche ou catégorie</span>
+    </div>
+    }
+
+    <!-- DOCUMENT PREVIEW MODAL -->
+    @if (selectedDocument) {
+    <div class="modal-backdrop" (click)="closeDocument()">
+        <div class="modal-box" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-header-left">
+                    <div class="modal-doc-icon" [class]="getCategoryClass(selectedDocument.category)">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.8">
+                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 class="modal-title">{{ selectedDocument.name }}</h4>
+                        <span class="modal-cat">{{ getCategoryLabel(selectedDocument.category) }}</span>
+                    </div>
+                </div>
+                <button class="modal-close" (click)="closeDocument()" type="button">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Preview placeholder -->
+                <div class="doc-preview-area">
+                    @if (loadingPreview) {
+                    <span>Chargement de l'aperçu...</span>
+                    } @else if (previewError) {
+                    <span>{{ previewError }}</span>
+                    <small>Vous pouvez toujours télécharger le document.</small>
+                    } @else if (isPreviewPdf && previewSafeUrl) {
+                    <iframe class="doc-preview-frame" [src]="previewSafeUrl" title="Aperçu PDF"></iframe>
+                    } @else if (isPreviewImage && previewUrl) {
+                    <img class="doc-preview-image" [src]="previewUrl" alt="Aperçu document" />
+                    } @else {
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.2">
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
+                        <polyline points="10 9 9 9 8 9" />
+                    </svg>
+                    <span>Aperçu indisponible pour ce format</span>
+                    }
+                    <small>{{ selectedDocument.size }}@if (selectedDocument.pages){ · {{ selectedDocument.pages }} pages
+                        }</small>
+                </div>
+                <!-- Meta details -->
+                <div class="meta-grid">
+                    <div class="meta-item"><span class="meta-lbl">Médecin</span><span class="meta-val">{{
+                            selectedDocument.doctor }}</span></div>
+                    <div class="meta-item"><span class="meta-lbl">Date</span><span class="meta-val">{{
+                            formatDate(selectedDocument.date) }}</span></div>
+                    <div class="meta-item"><span class="meta-lbl">Origine</span><span class="meta-val">
+                        <span class="doc-source-badge" [class.sent]="selectedDocument.uploadedBy === 'patient'" [class.received]="selectedDocument.uploadedBy === 'doctor'">
+                            {{ selectedDocument.uploadedBy === 'patient' ? 'Envoyé (Moi)' : 'Reçu (Médecin)' }}
+                        </span>
+                    </span></div>
+                    <div class="meta-item"><span class="meta-lbl">Catégorie</span><span class="meta-val">{{
+                            getCategoryLabel(selectedDocument.category) }}</span></div>
+                    <div class="meta-item"><span class="meta-lbl">Statut</span><span class="meta-val"><span
+                                class="status-badge" [class]="selectedDocument.status">{{
+                                getStatusLabel(selectedDocument.status) }}</span></span></div>
+                    <div class="meta-item"><span class="meta-lbl">Taille</span><span class="meta-val">{{
+                            selectedDocument.size }}</span></div>
+                    @if (selectedDocument.pages) { <div class="meta-item"><span class="meta-lbl">Pages</span><span
+                            class="meta-val">{{ selectedDocument.pages }}</span></div> }
+                </div>
+
+                <div class="share-panel">
+                    <span class="meta-lbl">Partager avec un médecin lié</span>
+                    @if (loadingLinkedDoctors) {
+                    <p class="share-state">Chargement des médecins liés...</p>
+                    } @else if (linkedDoctorsError) {
+                    <p class="share-state error">{{ linkedDoctorsError }}</p>
+                    } @else if (linkedDoctors.length === 0) {
+                    <p class="share-state">Aucun médecin lié disponible.</p>
+                    } @else {
+                    <select class="field-input" [(ngModel)]="selectedShareDoctorId">
+                        @for (doctor of linkedDoctors; track doctor.id) {
+                        <option [value]="doctor.id">{{ doctor.name }} · {{ doctor.speciality }}</option>
+                        }
+                    </select>
+                    }
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" (click)="closeDocument()" type="button">Fermer</button>
+                <button class="btn-doc-view" (click)="openDocumentInNewTab(selectedDocument)" type="button" style="background: rgba(124, 108, 196, .1); color: var(--indigo); border: 1px solid rgba(124, 108, 196, .2); padding: 0.5rem 1rem; border-radius: var(--r-sm); font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem; cursor: pointer;">
+					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+						<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+						<circle cx="12" cy="12" r="3" />
+					</svg>
+					Consulter
+				</button>
+                <button class="btn-share" [disabled]="sharing || !selectedShareDoctorId"
+                    (click)="shareDocument(selectedDocument)" type="button">{{ sharing ? 'Partage...' : 'Partager'
+                    }}</button>
+                <button class="btn-delete" (click)="deleteDocument(selectedDocument)" type="button">Supprimer</button>
+                <button class="btn-dl" (click)="downloadDocument(selectedDocument)" type="button">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                    Télécharger
+                </button>
+            </div>
+        </div>
+    </div>
+    }
+
+    @if (showUploadModal) {
+    <div class="modal-backdrop" (click)="closeUploadModal()">
+        <div class="modal-box" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-header-left">
+                    <div class="modal-doc-icon autre">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.8">
+                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 class="modal-title">Ajouter un document</h4>
+                        <span class="modal-cat">Upload patient</span>
+                    </div>
+                </div>
+                <button class="modal-close" (click)="closeUploadModal()" type="button">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="upload-form-grid">
+                    <label class="field-label">Fichier</label>
+                    <input class="field-input" type="file" (change)="onUploadFileChange($event)" />
+
+                    <label class="field-label">Nom</label>
+                    <input class="field-input" type="text" [(ngModel)]="uploadName" placeholder="Nom du document" />
+
+                    <label class="field-label">Catégorie</label>
+                    <select class="field-input" [(ngModel)]="uploadCategory">
+                        <option value="compte-rendu">Compte-rendu</option>
+                        <option value="ordonnance">Ordonnance</option>
+                        <option value="bilan">Bilan</option>
+                        <option value="imagerie">Imagerie</option>
+                        <option value="autre">Autre</option>
+                    </select>
+
+                    <label class="field-label">Pages</label>
+                    <input class="field-input" type="number" min="1" [(ngModel)]="uploadPageCount" />
+                </div>
+                @if (uploadError) {
+                <p class="upload-error">{{ uploadError }}</p>
+                }
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" (click)="closeUploadModal()" type="button">Annuler</button>
+                <button class="btn-dl" [disabled]="uploading" (click)="submitUpload()" type="button">
+                    {{ uploading ? 'Upload...' : 'Envoyer' }}
+                </button>
+            </div>
+        </div>
+    </div>
+    }
+</div>

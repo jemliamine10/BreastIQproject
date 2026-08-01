@@ -1,0 +1,13 @@
+// Adaptation de la méthode /next du contrôleur backend pour répondre au contrat frontend
+// Retourne soit un objet nextAppointment, soit un message
+
+@GetMapping("/next")
+public ResponseEntity<?> next(@RequestParam UUID patientId) {
+    var nextOpt = appointmentService.getNextAppointment(patientId);
+    if (nextOpt.isPresent()) {
+        Appointment next = nextOpt.get();
+        return ResponseEntity.ok(new NextAppointmentResponse(next));
+    } else {
+        return ResponseEntity.ok().body(Map.of("message", "Aucun prochain rendez-vous"));
+    }
+}

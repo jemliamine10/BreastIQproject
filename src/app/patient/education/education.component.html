@@ -1,0 +1,133 @@
+<div class="bg-decor">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+</div>
+
+<div class="view-container animate-fade-in">
+    
+    <!-- ── LUXURY HUB HEADER ── -->
+    <header class="hub-header">
+        <div class="header-left">
+            <h2 class="badge-new" style="margin-bottom: 12px; display: inline-block;">Bibliothèque Santé</h2>
+            <h1 class="hub-title">Centre d'Éducation <span>& Prévention</span></h1>
+            <p class="hub-subtitle">Un guide expert pour vous accompagner à chaque étape de votre parcours.</p>
+        </div>
+        
+        <div class="header-actions">
+            <div class="search-wrapper">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="color: var(--old-rose); opacity: 0.6;">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" placeholder="Rechercher un guide, un soin, un conseil..." (input)="onSearch($event)">
+            </div>
+        </div>
+    </header>
+
+    <!-- ── PREMIUM CATEGORY NAVIGATION ── -->
+    <nav class="category-nav">
+        @for (cat of categories; track cat) {
+            <button 
+                class="cat-link" 
+                [class.active]="selectedCategory === cat"
+                (click)="setCategory(cat)">
+                {{ cat }}
+            </button>
+        }
+    </nav>
+
+    @if (selectedCategory === 'Tous' && searchQuery === '') {
+        <!-- ── FEATURED: RECOMMENDED SECTION ── -->
+        <section class="hub-section">
+            <div class="section-top">
+                <h2 class="section-title">Sélection Personnalisée</h2>
+                <div class="badge-new">Parcours Prioritaire</div>
+            </div>
+            <div class="articles-grid featured">
+                @for (article of recommendedArticles; track article.id) {
+                    <div class="article-card featured animate-slide-up" (click)="openArticle(article)">
+                        <div class="card-img-box">
+                            <img [src]="article.imageUrl" [alt]="article.title">
+                            <div class="card-chip">{{ article.category }}</div>
+                        </div>
+                        <div class="card-content">
+                            <div class="meta-row">
+                                <span class="read-tag">{{ article.readTime }} de lecture</span>
+                                <span class="meta-sep"></span>
+                                <span class="date-tag">{{ article.date }}</span>
+                            </div>
+                            <h3 class="article-title">{{ article.title }}</h3>
+                            <p class="article-desc">{{ article.summary }}</p>
+                            <button class="btn-read">Lire l'article complet</button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </section>
+
+        <!-- ── POPULAR SECTION ── -->
+        <section class="hub-section">
+            <div class="section-top">
+                <h2 class="section-title">Articles les plus Consultés</h2>
+            </div>
+            <div class="articles-grid">
+                @for (article of popularArticles; track article.id) {
+                    <div class="article-card animate-slide-up" (click)="openArticle(article)">
+                        <div class="card-img-box">
+                            <img [src]="article.imageUrl" [alt]="article.title">
+                            <div class="card-chip">{{ article.category }}</div>
+                        </div>
+                        <div class="card-content">
+                            <div class="meta-row">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right: 4px;"><path d="M12 2v10l4.5 4.5"></path><circle cx="12" cy="12" r="10"></circle></svg>
+                                <span>{{ article.readTime }}</span>
+                                <span class="meta-sep"></span>
+                                <span>{{ article.date }}</span>
+                            </div>
+                            <h3 class="article-title">{{ article.title }}</h3>
+                            <button class="btn-simple">Explorer l'Expertise</button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </section>
+    } @else {
+        <!-- ── SEARCH / FILTER RESULTS ── -->
+        <section class="hub-section">
+            <div class="section-top">
+                <h2 class="section-title">
+                    {{ searchQuery ? 'Résultats pour "' + searchQuery + '"' : selectedCategory }}
+                </h2>
+                <div class="badge-new" *ngIf="filteredArticles.length > 0">{{ filteredArticles.length }} Articles</div>
+            </div>
+
+            <div class="articles-grid">
+                @for (article of filteredArticles; track article.id) {
+                    <div class="article-card animate-slide-up" (click)="openArticle(article)">
+                        <div class="card-img-box">
+                            <img [src]="article.imageUrl" [alt]="article.title">
+                            <div class="card-chip">{{ article.category }}</div>
+                        </div>
+                        <div class="card-content">
+                            <div class="meta-row">
+                                <span class="read-tag">{{ article.readTime }}</span>
+                                <span class="meta-sep"></span>
+                                <span class="date-tag">{{ article.date }}</span>
+                            </div>
+                            <h3 class="article-title">{{ article.title }}</h3>
+                            <p class="article-desc">{{ article.summary }}</p>
+                            <button class="btn-read">Détails de l'article</button>
+                        </div>
+                    </div>
+                }
+            </div>
+            
+            @if (filteredArticles.length === 0) {
+                <div class="empty-hub animate-fade-in">
+                    <p style="font-size: 1.5rem; margin-bottom: 8px;">✨ Aucun article trouvé</p>
+                    <p style="font-weight: 500;">Essayez de modifier vos critères de recherche ou sélectionnez une catégorie différente.</p>
+                </div>
+            }
+        </section>
+    }
+</div>

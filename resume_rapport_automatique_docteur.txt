@@ -1,0 +1,59 @@
+================================================================================
+RÉSUMÉ DE LA FONCTIONNALITÉ RAPPORT AUTOMATIQUE (CÔTÉ DOCTEUR)
+================================================================================
+
+Ce document résume le fonctionnement technique et fonctionnel de la génération 
+automatique de rapports médicaux dans le module "Imaging AI" du docteur.
+
+1. ARCHITECTURE ET TRIGGER
+--------------------------
+- Frontend : Intégré dans le composant `ImagingComponent`.
+- Trigger : Le rapport est généré AUTOMATIQUEMENT dès que l'analyse IA de la 
+  mammographie est terminée.
+- Export : Supporte le téléchargement au format PDF professionnel.
+
+2. PROCESSUS DE GÉNÉRATION (BACKEND)
+------------------------------------
+Le service `MammogramAnalysisService` suit une logique en 3 étapes :
+
+A. Collecte des Données IA :
+   Il récupère les résultats bruts du modèle de vision (Mask R-CNN) :
+   - Verdict global (Normal, Bénin, Malin, Mixte).
+   - Indice de confiance.
+   - Détails de chaque détection (type de lésion, score de classification).
+
+B. Synthèse par LLM (Intelligence Artificielle) :
+   Le système envoie ces données à un modèle de langage avec des instructions 
+   médicales précises pour transformer les chiffres en texte clinique.
+   - Langue : Français exclusivement.
+   - Style : Professionnel et radiologique.
+
+C. Système de Secours (Fallback) :
+   Si le service de génération de texte est indisponible, le backend possède un 
+   générateur de secours qui crée un rapport structuré en Markdown basé sur les 
+   données exactes de l'analyse, garantissant qu'un rapport est TOUJOURS fourni.
+
+3. STRUCTURE DU RAPPORT GÉNÉRÉ
+------------------------------
+Chaque rapport suit une structure médicale standardisée :
+
+1. RÉSUMÉ : Synthèse globale de l'examen.
+2. OBSERVATIONS : Analyse détaillée de chaque anomalie détectée (masses, 
+   calcifications) avec leurs caractéristiques morphologiques.
+3. CLASSIFICATION BI-RADS : Évaluation selon le score standard international.
+4. RECOMMANDATIONS : Prochaines étapes suggérées (biopsie, suivi à 6 mois, etc.).
+5. CONCLUSION : Verdict final validé par l'IA.
+
+4. FONCTIONNALITÉS CÔTÉ DOCTEUR
+-------------------------------
+Dans l'interface "Imaging AI", le docteur peut :
+- Visualiser le rapport en temps réel à côté de l'image annotée.
+- Régénérer le rapport si nécessaire.
+- Télécharger le rapport en PDF (le PDF est formaté proprement avec le logo, 
+  le nom du patient et la date).
+- Consulter l'historique : Chaque ancienne analyse conserve son rapport 
+  généré d'origine.
+
+================================================================================
+FIN DU RÉSUMÉ
+================================================================================

@@ -1,0 +1,238 @@
+<!-- LOADING SCREEN -->
+<div class="loading-screen" *ngIf="loading">
+  <div class="loader-ring"></div>
+  <p>Préparation de votre espace bien-être…</p>
+</div>
+
+<div class="dashboard-container" *ngIf="!loading && data">
+  
+  <!-- BACKGROUND DECORATIONS (Ultra WoW) -->
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+
+  <!-- ═══ HEADER ═══ -->
+  <div class="header-welcome fade-in-up">
+    <div class="greeting">
+      <h1>{{ greeting }}</h1>
+      <p>Aujourd'hui est une nouvelle étape vers votre guérison • {{ today | titlecase }}</p>
+    </div>
+    <div class="header-badges">
+      <div class="badge-pill" [ngClass]="statusClass">
+        <div class="badge-dot" [ngClass]="statusClass"></div>
+        Statut : {{ statusLabel }}
+      </div>
+      <div class="badge-pill msg" *ngIf="data.unreadMessages > 0" routerLink="/patient/messages">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path></svg>
+        {{ data.unreadMessages }} messages
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TOP GRID ═══ -->
+  <div class="top-grid fade-in-up delay-1">
+    
+    <!-- HEALTH SCORE CIRCLE -->
+    <div class="glass-card score-card">
+      <h3 class="section-title">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+        Niveau de Vitalité
+      </h3>
+      <div class="score-wrapper">
+        <svg class="score-svg" viewBox="0 0 200 200">
+          <defs>
+            <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#a95e92" />
+              <stop offset="100%" stop-color="#ebaece" />
+            </linearGradient>
+          </defs>
+          <circle class="score-bg" cx="100" cy="100" r="82"></circle>
+          <circle class="score-fill" cx="100" cy="100" r="82"
+                  [attr.stroke-dasharray]="scoreCircumference"
+                  [attr.stroke-dashoffset]="scoreCircumference - scoreStroke">
+          </circle>
+        </svg>
+        <div class="score-text">
+          <h2>{{ data.healthScore }}</h2>
+          <span>/100</span>
+        </div>
+      </div>
+      <p class="score-subtitle">Suivi de Santé : {{ data.profileCompletion }}% complété</p>
+    </div>
+
+    <!-- TRACKER TREND CHART -->
+    <div class="glass-card">
+      <h3 class="section-title">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path></svg>
+        Courbe de Bien-être (7j)
+      </h3>
+      
+      <div class="chart-container" *ngIf="trackerPoints.length > 0">
+        
+        <!-- Y-Axis (Ordonnées) -->
+        <div class="y-axis">
+          <span>100%</span>
+          <span>50%</span>
+          <span>0%</span>
+        </div>
+
+        <svg class="svg-chart" viewBox="0 -10 600 220" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="trackerArea" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="rgba(169,94,146,0.3)" />
+              <stop offset="100%" stop-color="rgba(169,94,146,0)" />
+            </linearGradient>
+          </defs>
+          <path class="tracker-area" [attr.d]="trackerFillPath"></path>
+          <path class="tracker-line" [attr.d]="trackerLinePath"></path>
+          <g class="tracker-dots">
+            <circle *ngFor="let p of trackerPoints; let i = index"
+                    [attr.cx]="p.x" [attr.cy]="p.y"
+                    [style.animation-delay]="(0.9 + i * 0.1) + 's'" />
+          </g>
+        </svg>
+        <div class="x-axis">
+          <span *ngFor="let l of trackerLabels">{{ l }}</span>
+        </div>
+      </div>
+      <div *ngIf="trackerPoints.length === 0" class="empty-state">
+        Données de suivi prochainement disponibles
+      </div>
+    </div>
+
+    <!-- NEXT RDV -->
+    <div class="glass-card rdv-card-wrapper">
+      <h3 class="section-title">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        Agenda Médical
+      </h3>
+      
+      <div class="rdv-highlight" *ngIf="data.nextAppointment">
+        <div class="rdv-date">
+          <span class="day">{{ formatDay(data.nextAppointment.startAt) }}</span>
+          <span class="month">{{ formatMonth(data.nextAppointment.startAt) }}</span>
+        </div>
+        <div class="rdv-time">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          {{ formatTime(data.nextAppointment.startAt) }} • {{ data.nextAppointment.title || data.nextAppointment.type }}
+        </div>
+        <div class="rdv-doctor">
+          <div class="doc-avatar">
+            {{ data.nextAppointment.doctorFirstName?.[0] }}{{ data.nextAppointment.doctorLastName?.[0] }}
+          </div>
+          <div class="doc-name">
+            <h4>Dr. {{ data.nextAppointment.doctorLastName }}</h4>
+            <p>{{ data.nextAppointment.speciality }}</p>
+          </div>
+        </div>
+      </div>
+      
+      <div *ngIf="!data.nextAppointment" class="empty-state">Aucun RDV à venir</div>
+    </div>
+  </div>
+
+  <!-- ═══ TREATMENT PROGRESS ═══ -->
+  <div class="glass-card treatment-card fade-in-up delay-2" *ngIf="data.currentTreatment">
+    <h3 class="section-title">
+      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+      Parcours de Soins Actuel
+    </h3>
+    <div class="treatment-content">
+      <div class="treat-info">
+        <span class="treat-type">{{ getTreatmentLabel(data.currentTreatment.treatmentType) }}</span>
+        <span class="treat-protocol" *ngIf="data.currentTreatment.protocol">Ligne : {{ data.currentTreatment.protocol }}</span>
+        <span class="treat-cycle">Cycle {{ data.currentTreatment.currentCycle }} sur {{ data.currentTreatment.totalCycles }}</span>
+      </div>
+      <div class="treat-progress">
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" [style.width.%]="treatmentPct"></div>
+        </div>
+        <span class="progress-label">{{ treatmentPct }}% du parcours validé • {{ data.currentTreatment.completedSessions }}/{{ data.currentTreatment.totalSessions }} séances effectuées</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ BOTTOM GRID ═══ -->
+  <div class="bottom-grid fade-in-up delay-2">
+    
+    <!-- TIMELINE -->
+    <div class="glass-card">
+      <h3 class="section-title">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        Historique de Soins
+      </h3>
+      
+      <div *ngIf="data.recentTimeline.length === 0" class="empty-state">L'histoire de votre guérison s'écrit ici</div>
+      
+      <div class="timeline-container" *ngIf="data.recentTimeline.length > 0">
+        <div class="timeline-item" *ngFor="let e of data.recentTimeline; let i = index" 
+             [ngClass]="getTimelineClass(e.eventType)"
+             [style.animation-delay]="(0.2 + i * 0.12) + 's'">
+          <div class="timeline-dot"></div>
+          <div class="tl-header">
+            <h4 class="tl-title">{{ e.title }}</h4>
+            <span class="tl-date">{{ formatDay(e.eventDate) }} {{ formatMonth(e.eventDate) }} • {{ formatTime(e.eventDate) }}</span>
+          </div>
+          <p class="tl-desc" *ngIf="e.description">{{ e.description }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUICK ACTIONS + ALERTS -->
+    <div class="right-column">
+      
+      <!-- ALERTS -->
+      <div class="glass-card fade-in-up delay-3" *ngIf="data.recentAlerts.length > 0">
+        <h3 class="section-title">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          Notes Clés
+        </h3>
+        <div class="alert-item" *ngFor="let a of data.recentAlerts" [ngClass]="getSeverityClass(a.severity)">
+          <div class="alert-icon">
+             <span *ngIf="a.severity === 'CRITICAL' || a.severity === 'HIGH'">🩺</span>
+             <span *ngIf="a.severity === 'MEDIUM'">💊</span>
+             <span *ngIf="a.severity === 'LOW'">📖</span>
+          </div>
+          <div class="alert-content">
+            <h4>{{ a.message }}</h4>
+            <span class="alert-time">Posté {{ timeAgo(a.createdAt) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- QUICK ACTIONS -->
+      <div class="quick-actions fade-in-up delay-4">
+        <button class="btn-action ai-btn" routerLink="/patient/tracker">
+          <div class="action-left">
+            <div class="btn-icon-sq">
+              <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+            </div>
+            <span class="btn-label">Faire mon suivi du jour</span>
+          </div>
+          <svg width="20" height="20" fill="none" class="btn-arrow" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="3" d="M9 5l7 7-7 7"></path></svg>
+        </button>
+
+        <button class="btn-action" routerLink="/patient/messages">
+          <div class="action-left">
+            <div class="btn-icon-sq">
+              <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path></svg>
+            </div>
+            <span class="btn-label">Échanger avec mon équipe</span>
+          </div>
+          <svg width="20" height="20" fill="none" class="btn-arrow" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="3" d="M9 5l7 7-7 7"></path></svg>
+        </button>
+
+        <button class="btn-action" routerLink="/patient/documents">
+          <div class="action-left">
+            <div class="btn-icon-sq">
+              <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            </div>
+            <span class="btn-label">Dossier Médical ({{ data.documentCount }} docs)</span>
+          </div>
+          <svg width="20" height="20" fill="none" class="btn-arrow" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="3" d="M9 5l7 7-7 7"></path></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

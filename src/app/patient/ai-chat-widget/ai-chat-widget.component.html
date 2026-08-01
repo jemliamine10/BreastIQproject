@@ -1,0 +1,133 @@
+<!-- Launcher Button -->
+<div class="ai-chat-launcher" *ngIf="!isOpen">
+  <button type="button" class="ai-chat-button" (click)="openChat()" aria-label="Ouvrir l'assistant IA">
+    <span class="ai-chat-button__icon">AI</span>
+    <span class="ai-chat-button__text">Assistant IA</span>
+  </button>
+</div>
+
+<!-- Chat Panel -->
+<section class="ai-chat-panel" *ngIf="isOpen" aria-label="Assistant santé IA">
+  <header class="ai-chat-panel__header">
+    <div>
+      <p class="ai-chat-panel__eyebrow">Assistant santé du sein</p>
+      <h2>Posez-moi vos questions</h2>
+    </div>
+    <button type="button" class="ai-chat-close" (click)="closeChat()" aria-label="Fermer">×</button>
+  </header>
+
+  <div #messagesViewport class="ai-chat-panel__messages">
+    <article *ngFor="let message of messages; trackBy: trackByIndex" class="message"
+             [class.message--user]="message.role === 'user'"
+             [class.message--assistant]="message.role === 'assistant'">
+      <span class="message__label">{{ message.role === 'user' ? 'Vous' : 'IA' }}</span>
+      <p class="message__content">{{ message.content }}</p>
+
+      <!-- Doctor Cards -->
+      <section class="doctor-cards" *ngIf="message.role === 'assistant' && message.doctors?.length">
+        <p class="section-title">🩺 Médecins suggérés</p>
+        <article class="doctor-card" *ngFor="let doctor of message.doctors; trackBy: trackByDoctorId">
+          <img *ngIf="doctor.imageUrl; else doctorPlaceholder"
+               class="doctor-card__avatar" [src]="doctor.imageUrl" alt="Photo du médecin"/>
+          <ng-template #doctorPlaceholder>
+            <div class="doctor-card__avatar doctor-card__avatar--placeholder">{{ initials(doctor.fullName) }}</div>
+          </ng-template>
+          <div class="doctor-card__body">
+            <p class="doctor-card__name">{{ doctor.fullName }}</p>
+            <p class="doctor-card__speciality">{{ doctor.speciality }}</p>
+            <p class="doctor-card__meta" *ngIf="doctor.consultationMode">{{ modeLabel(doctor.consultationMode) }}</p>
+            <span class="doctor-card__badge" [class.doctor-card__badge--available]="doctor.availableToday">
+              {{ doctor.availableToday ? 'Disponible aujourd\'hui' : 'Voir le planning' }}
+            </span>
+          </div>
+          <button type="button" class="doctor-card__action" (click)="navigateToMyDoctors()"
+                  title="Ajouter ce médecin">＋</button>
+        </article>
+      </section>
+
+      <!-- Connected Doctors -->
+      <section class="doctor-cards" *ngIf="message.role === 'assistant' && message.connectedDoctors?.length">
+        <p class="section-title">👨‍⚕️ Vos médecins connectés</p>
+        <article class="doctor-card doctor-card--connected" *ngFor="let doctor of message.connectedDoctors; trackBy: trackByDoctorId">
+          <img *ngIf="doctor.imageUrl; else connDocPlaceholder"
+               class="doctor-card__avatar" [src]="doctor.imageUrl" alt="Photo"/>
+          <ng-template #connDocPlaceholder>
+            <div class="doctor-card__avatar doctor-card__avatar--placeholder">{{ initials(doctor.fullName) }}</div>
+          </ng-template>
+          <div class="doctor-card__body">
+            <p class="doctor-card__name">{{ doctor.fullName }}</p>
+            <p class="doctor-card__speciality">{{ doctor.speciality }}</p>
+            <span class="doctor-card__badge doctor-card__badge--connected">Connecté</span>
+          </div>
+        </article>
+      </section>
+
+      <!-- Next Appointment Card -->
+      <section class="info-card info-card--appointment" *ngIf="message.role === 'assistant' && message.nextAppointment">
+        <p class="section-title">📅 Prochain rendez-vous</p>
+        <div class="info-card__body">
+          <p class="info-card__main">{{ message.nextAppointment.title }}</p>
+          <p class="info-card__sub">{{ formatDate(message.nextAppointment.startAt) }}</p>
+          <p class="info-card__sub" *ngIf="message.nextAppointment.doctorName">Avec {{ message.nextAppointment.doctorName }}</p>
+          <p class="info-card__sub" *ngIf="message.nextAppointment.location">📍 {{ message.nextAppointment.location }}</p>
+        </div>
+        <button type="button" class="info-card__link" (click)="navigateToAppointments()">Voir mes RDV →</button>
+      </section>
+
+      <!-- Active Treatments -->
+      <section class="treatment-cards" *ngIf="message.role === 'assistant' && message.activeTreatments?.length">
+        <p class="section-title">💊 Traitements en cours</p>
+        <article class="info-card info-card--treatment" *ngFor="let t of message.activeTreatments; trackBy: trackByTreatmentId">
+          <div class="info-card__body">
+            <p class="info-card__main">{{ treatmentLabel(t.treatmentType) }}</p>
+            <p class="info-card__sub" *ngIf="t.protocol">Protocole : {{ t.protocol }}</p>
+            <div class="progress-row" *ngIf="t.totalCycles">
+              <div class="progress-bar">
+                <div class="progress-bar__fill" [style.width.%]="cyclePercent(t.currentCycle, t.totalCycles)"></div>
+              </div>
+              <span class="progress-label">Cycle {{ t.currentCycle }}/{{ t.totalCycles }}</span>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- Recent Alerts -->
+      <section class="alert-cards" *ngIf="message.role === 'assistant' && message.recentAlerts?.length">
+        <p class="section-title">⚠️ Alertes récentes</p>
+        <article class="alert-card" *ngFor="let a of message.recentAlerts; trackBy: trackByAlertId"
+                 [ngClass]="severityClass(a.severity)">
+          <span class="alert-card__badge">{{ severityLabel(a.severity) }}</span>
+          <p class="alert-card__message">{{ a.message }}</p>
+          <p class="alert-card__date">{{ formatDate(a.createdAt) }}</p>
+        </article>
+      </section>
+    </article>
+
+    <!-- Typing indicator -->
+    <article *ngIf="isSending" class="message message--assistant">
+      <span class="message__label">IA</span>
+      <p class="message__content message__content--typing">Réflexion en cours...</p>
+    </article>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="ai-chat-panel__quick" *ngIf="!isSending && messages.length <= 2">
+    <button type="button" class="quick-chip" *ngFor="let qa of quickActions" (click)="sendQuickAction(qa.text)">
+      {{ qa.label }}
+    </button>
+  </div>
+
+  <!-- Composer -->
+  <form class="ai-chat-panel__composer" (ngSubmit)="sendMessage()">
+    <textarea #chatInput name="message" [(ngModel)]="draftMessage"
+              (keydown.enter)="handleEnter($event)" rows="3"
+              placeholder="Décrivez votre symptôme ou posez une question..."
+              [disabled]="isSending"></textarea>
+    <div class="ai-chat-panel__actions">
+      <p class="ai-chat-panel__hint">Entrée pour envoyer, Maj+Entrée pour un saut de ligne.</p>
+      <button type="submit" class="send-button" [disabled]="isSending || !draftMessage.trim()">
+        {{ isSending ? 'Envoi...' : 'Envoyer' }}
+      </button>
+    </div>
+  </form>
+</section>

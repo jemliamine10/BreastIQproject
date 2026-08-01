@@ -1,0 +1,609 @@
+<div class="landing-container">
+
+  <!-- FLOATING ORBS (Decorative) -->
+  <div class="orb orb-1" [ngStyle]="getParallaxStyle(0.5)"></div>
+  <div class="orb orb-2" [ngStyle]="getParallaxStyle(0.3)"></div>
+  <div class="orb orb-3" [ngStyle]="getParallaxStyle(0.7)"></div>
+  
+  <!-- ═══════════ NAVBAR ═══════════ -->
+  <nav class="navbar" [class.scrolled]="isScrolled">
+    <div class="container navbar-content">
+      <div class="logo" (click)="scrollToSection('hero')">
+        <img src="assets/logoBreastCancersite.png" alt="BreastIQ" class="logo-img" />
+      </div>
+
+      <div class="nav-links" [class.mobile-open]="mobileMenuOpen">
+        <a (click)="scrollToSection('solution')">Solution</a>
+        <a (click)="scrollToSection('features')">Fonctionnalités</a>
+        <a (click)="scrollToSection('security')">Sécurité</a>
+        <a (click)="scrollToSection('testimonials')">Témoignages</a>
+        <a (click)="scrollToSection('faq')">FAQ</a>
+      </div>
+
+      <div class="nav-actions">
+        <a routerLink="/public/login" class="btn btn-ghost">Se connecter</a>
+        <a routerLink="/public/register" class="btn btn-primary btn-glow">Démarrer gratuitement</a>
+      </div>
+
+      <button class="mobile-toggle" (click)="toggleMobileMenu()">
+        <span [class.open]="mobileMenuOpen"></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ═══════════ HERO ═══════════ -->
+  <header id="hero" class="hero-section">
+    <div class="hero-grid-bg"></div>
+    <div class="container hero-content" [@fadeInUp]>
+      <div class="hero-text">
+        <div class="badge-pill reveal">
+          <span class="badge-dot"></span>
+          Plateforme IA Médicale — Nouvelle Génération
+        </div>
+        <h1 class="reveal">
+          Le futur du <span class="gradient-text">dépistage intelligent</span> du cancer du sein
+        </h1>
+        <p class="hero-subtitle reveal">
+          Analyse d'imagerie assistée par IA, suivi clinique personnalisé, collaboration médecin–patient(e) en temps réel. Le tout dans une plateforme sécurisée de bout en bout.
+        </p>
+        <div class="hero-actions reveal">
+          <a routerLink="/public/register" class="btn btn-xl btn-primary btn-glow">
+            <span>Commencer gratuitement</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+          <a routerLink="/public/register-doctor" class="btn btn-xl btn-outline">
+            <span>Espace Médecin</span>
+          </a>
+        </div>
+        <div class="trust-row reveal">
+          <div class="trust-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Données HDS sécurisées
+          </div>
+          <div class="trust-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>
+            Aide à la décision IA
+          </div>
+          <div class="trust-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Collaboration temps-réel
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <!-- Main Dashboard Card -->
+        <div class="dashboard-card reveal" [ngStyle]="getParallaxStyle(0.15)">
+          <div class="dash-header">
+            <div class="dash-user">
+              <div class="dash-avatar">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </div>
+              <div>
+                <div class="dash-name">Sophie Dubois</div>
+                <div class="dash-status">
+                  <span class="status-dot green"></span> Risque faible — 18%
+                </div>
+              </div>
+            </div>
+            <div class="dash-badge">Suivi actif</div>
+          </div>
+          <div class="dash-stats">
+            <div class="dash-stat-item">
+              <span class="dash-stat-label">Dernier examen</span>
+              <span class="dash-stat-value">08 Fév 2026</span>
+            </div>
+            <div class="dash-stat-item">
+              <span class="dash-stat-label">Prochain RDV</span>
+              <span class="dash-stat-value accent">15 Fév 2026</span>
+            </div>
+            <div class="dash-stat-item">
+              <span class="dash-stat-label">Score IA</span>
+              <span class="dash-stat-value">
+                <span class="score-bar"><span class="score-fill" style="width: 18%"></span></span>
+                18%
+              </span>
+            </div>
+          </div>
+          <div class="dash-chart">
+            <div class="chart-label">Évolution du risque (6 mois)</div>
+            <div class="chart-bars">
+              <div class="chart-bar-wrap" *ngFor="let h of [35,42,28,22,20,18]; let i = index">
+                <div class="chart-bar" [style.height.%]="h" [class.active]="i === 5">
+                  <span class="chart-tooltip">{{h}}%</span>
+                </div>
+                <span class="chart-month">{{ ['Sep','Oct','Nov','Déc','Jan','Fév'][i] }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Floating notification cards -->
+        <div class="float-card float-ai" [ngStyle]="getParallaxStyle(0.4)">
+          <div class="float-icon ai">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          </div>
+          <div>
+            <div class="float-title">Analyse IA</div>
+            <div class="float-desc">Bénignité probable — 94%</div>
+          </div>
+        </div>
+
+        <div class="float-card float-rdv" [ngStyle]="getParallaxStyle(0.6)">
+          <div class="float-icon rdv">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+          <div>
+            <div class="float-title">Rendez-vous</div>
+            <div class="float-desc">Confirmé — 15 Fév</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════ STATS BAR ═══════════ -->
+  <section class="stats-bar">
+    <div class="container">
+      <div class="stats-grid reveal">
+        <div class="stat-block" *ngFor="let stat of stats">
+          <div class="stat-number">{{stat.value}}<span class="stat-suffix" *ngIf="stat.suffix">{{stat.suffix}}</span></div>
+          <div class="stat-label">{{stat.label}}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ LOGOS ═══════════ -->
+  <section class="logos-section">
+    <div class="container">
+      <p class="logos-label">Utilisé par des établissements de confiance</p>
+      <div class="logo-strip">
+        <div class="logo-item">CLINIQUE SANTÉ</div>
+        <div class="logo-item">MED-IMAGING</div>
+        <div class="logo-item">ONCO-SUD</div>
+        <div class="logo-item">DOCOLAB</div>
+        <div class="logo-item">HOSPITALIER+</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ WHY DIFFERENT ═══════════ -->
+  <section id="solution" class="section why-section">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-badge">Notre approche</div>
+        <h2>Pourquoi BreastIQ est <span class="gradient-text">différent</span> ?</h2>
+        <p>Une approche holistique combinant technologie de pointe et parcours de soin humain.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card reveal" *ngFor="let feature of [
+          { icon: 'eye', title: 'IA Visuelle Avancée', desc: 'Segmentation automatique et heatmaps pour identifier les zones d\'intérêt sur mammographies et échographies.', tag: 'Deep Learning' },
+          { icon: 'bar-chart', title: 'Suivi Intelligent', desc: 'Timeline centralisée des symptômes, traitements et alertes pour un suivi proactif de l\'évolution.', tag: 'Analytics' },
+          { icon: 'users', title: 'Collaboration Directe', desc: 'Lien numérique sécurisé entre le spécialiste et le/la patient(e) pour le partage de documents et la télé-expertise.', tag: 'Real-time' }
+        ]">
+          <div class="feature-tag">{{feature.tag}}</div>
+          <div class="feature-icon-wrap" [ngSwitch]="feature.icon">
+            <svg *ngSwitchCase="'eye'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-premium"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg *ngSwitchCase="'bar-chart'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-premium"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            <svg *ngSwitchCase="'users'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-premium"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <h3>{{feature.title}}</h3>
+          <p>{{feature.desc}}</p>
+          <div class="feature-link">
+            En savoir plus
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ FEATURES TABS ═══════════ -->
+  <section id="features" class="section dual-features-section">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-badge">Fonctionnalités</div>
+        <h2>Conçu pour <span class="gradient-text">chaque acteur</span> du parcours</h2>
+        <p>Deux interfaces dédiées, une seule mission : améliorer le suivi et la détection.</p>
+      </div>
+
+      <div class="tabs-container reveal">
+        <div class="tabs-wrapper">
+          <button class="tab-btn" [class.active]="activeFeatureTab === 'patient'" (click)="toggleFeatureTab('patient')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Pour le/la Patient(e)
+          </button>
+          <button class="tab-btn" [class.active]="activeFeatureTab === 'doctor'" (click)="toggleFeatureTab('doctor')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            Pour le Médecin
+          </button>
+        </div>
+      </div>
+
+      <div class="feature-panel reveal">
+        <!-- Patient Content -->
+        <div class="feature-content" *ngIf="activeFeatureTab === 'patient'" [@fade]>
+          <div class="text-side">
+            <h3>Prenez le contrôle de <span class="gradient-text">votre parcours</span> de soin</h3>
+            <ul class="checklist">
+              <li>
+                <div class="check-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div>
+                  <strong>Profil Médical Sécurisé</strong>
+                  <p>Vos données médicales, cryptées et accessibles uniquement par vous et vos médecins autorisés.</p>
+                </div>
+              </li>
+              <li>
+                <div class="check-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div>
+                  <strong>Suivi Traitements & Allergies</strong>
+                  <p>Ne perdez plus le fil de vos prescriptions et signalez vos effets secondaires simplement.</p>
+                </div>
+              </li>
+              <li>
+                <div class="check-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div>
+                  <strong>Rendez-vous en un clic</strong>
+                  <p>Réservez et gérez vos consultations avec vos spécialistes connectés directement.</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+          <div class="visual-side">
+            <div class="phone-mockup">
+              <div class="phone-notch"></div>
+              <div class="phone-screen">
+                <div class="phone-greeting">
+                  Bonjour, Marie 
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-premium inline-icon"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
+                </div>
+                <div class="phone-card">
+                  <div class="phone-card-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-premium"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  </div>
+                  <div>
+                    <div class="phone-card-title">Prochain RDV</div>
+                    <div class="phone-card-sub">Dr. Martin — 15 Fév, 10h</div>
+                  </div>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </div>
+                <div class="phone-card">
+                  <div class="phone-card-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-premium"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                  </div>
+                  <div>
+                    <div class="phone-card-title">Mes Résultats</div>
+                    <div class="phone-card-sub">Dernière analyse — Normal</div>
+                  </div>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </div>
+                <div class="phone-card highlight-card">
+                  <div class="phone-card-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-premium"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
+                  </div>
+                  <div>
+                    <div class="phone-card-title">Traitements actifs</div>
+                    <div class="phone-card-sub">2 en cours · 0 alerte</div>
+                  </div>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Doctor Content -->
+        <div class="feature-content" *ngIf="activeFeatureTab === 'doctor'" [@fade]>
+          <div class="text-side">
+            <h3>Optimisez vos <span class="gradient-text">diagnostics</span> et votre suivi</h3>
+            <ul class="checklist">
+              <li>
+                <div class="check-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div>
+                  <strong>Dashboard Patients(es)</strong>
+                  <p>Vue d'ensemble avec indicateurs de priorité (Triage IA) pour gérer votre file active efficacement.</p>
+                </div>
+              </li>
+              <li>
+                <div class="check-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div>
+                  <strong>Comparaison d'Examens</strong>
+                  <p>Outils de visualisation côte-à-côte pour évaluer l'évolution temporelle des lésions.</p>
+                </div>
+              </li>
+              <li>
+                <div class="check-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <div>
+                  <strong>Validation IA Assistée</strong>
+                  <p>L'IA propose, vous validez. Gardez le contrôle total sur le diagnostic final à tout moment.</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+          <div class="visual-side">
+            <div class="doctor-mockup">
+              <div class="doc-header">
+                <div class="doc-title">Dashboard — Dr. Martin</div>
+                <div class="doc-date">Fév 2026</div>
+              </div>
+              <div class="doc-alert">
+                <span class="alert-dot"></span>
+                <strong>2 cas prioritaires</strong> détectés par l'IA
+              </div>
+              <div class="doc-list">
+                <div class="doc-patient-row">
+                  <div class="doc-patient-avatar">MD</div>
+                  <div class="doc-patient-info">
+                    <div class="doc-patient-name">Dupont M.</div>
+                    <div class="doc-patient-status">Analyse en cours...</div>
+                  </div>
+                  <span class="priority-tag high">Urgent</span>
+                </div>
+                <div class="doc-patient-row">
+                  <div class="doc-patient-avatar">BL</div>
+                  <div class="doc-patient-info">
+                    <div class="doc-patient-name">Bernard L.</div>
+                    <div class="doc-patient-status">Validé — Bénin</div>
+                  </div>
+                  <span class="priority-tag low">Normal</span>
+                </div>
+                <div class="doc-patient-row">
+                  <div class="doc-patient-avatar">RC</div>
+                  <div class="doc-patient-info">
+                    <div class="doc-patient-name">Rousseau C.</div>
+                    <div class="doc-patient-status">En attente de résultat</div>
+                  </div>
+                  <span class="priority-tag medium">Modéré</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ SECURITY ═══════════ -->
+  <section id="security" class="section security-section">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-badge">Sécurité</div>
+        <h2>Vos données, notre <span class="gradient-text">priorité absolue</span></h2>
+        <p>Infrastructure certifiée, chiffrement de bout en bout, conformité totale.</p>
+      </div>
+      <div class="security-grid">
+        <div class="sec-card reveal" *ngFor="let sec of [
+          { icon: 'lock', title: 'Chiffrement AES-256', desc: 'Données chiffrées en transit (TLS 1.3) et au repos avec les standards les plus exigeants.' },
+          { icon: 'shield', title: 'Authentification Forte', desc: 'MFA obligatoire, gestion granulaire des rôles et sessions sécurisées.' },
+          { icon: 'clipboard', title: 'Audit & Traçabilité', desc: 'Logs complets de chaque accès aux dossiers médicaux, exportables.' },
+          { icon: 'scale', title: 'RGPD & HDS', desc: 'Conformité stricte RGPD et hébergement certifié Données de Santé.' }
+        ]">
+          <div class="sec-icon-wrap" [ngSwitch]="sec.icon">
+            <svg *ngSwitchCase="'lock'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-premium"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <svg *ngSwitchCase="'shield'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-premium"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <svg *ngSwitchCase="'clipboard'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-premium"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+            <svg *ngSwitchCase="'scale'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-premium"><path d="M16 16h-3.2c-.3 0-.6-.3-.6-.6V7h1M8 16h3.2c.3 0 .6-.3.6-.6V7h-1M12 3v4M3 7h18M6 7l-2 9h4l-2-9ZM18 7l-2 9h4l-2-9Z"/></svg>
+          </div>
+          <h4>{{sec.title}}</h4>
+          <p>{{sec.desc}}</p>
+        </div>
+      </div>
+      <p class="disclaimer reveal">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        Aide à la décision médicale uniquement. Non substitutif au diagnostic médical.
+      </p>
+    </div>
+  </section>
+
+  <!-- ═══════════ HOW IT WORKS ═══════════ -->
+  <section class="section steps-section">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-badge">Démarrage</div>
+        <h2>Opérationnel en <span class="gradient-text">3 étapes</span></h2>
+        <p>De l'inscription à votre premier suivi, tout est simplifié.</p>
+      </div>
+      <div class="steps-timeline reveal">
+        <div class="step-card" *ngFor="let step of [
+          { num: '01', title: 'Créez votre profil', desc: 'Inscription rapide en tant que patient(e) ou médecin. Profil sécurisé configuré en 2 minutes.' },
+          { num: '02', title: 'Connectez-vous', desc: 'Reliez votre compte patient-médecin via code unique et importez vos examens existants.' },
+          { num: '03', title: 'Suivi IA activé', desc: 'L\'IA analyse vos données, le médecin valide, et le suivi temps-réel commence.' }
+        ]">
+          <div class="step-num">{{step.num}}</div>
+          <div class="step-connector"></div>
+          <h3>{{step.title}}</h3>
+          <p>{{step.desc}}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ TESTIMONIALS ═══════════ -->
+  <section id="testimonials" class="section testimonials-section">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-badge">Témoignages</div>
+        <h2>Ce qu'ils en <span class="gradient-text">disent</span></h2>
+        <p>Des professionnels de santé et patients(es) nous font confiance chaque jour.</p>
+      </div>
+      <div class="testimonials-grid">
+        <div class="testimonial-card reveal" *ngFor="let t of testimonials; let i = index">
+          <div class="testi-quote-icon">"</div>
+          <div class="stars">
+            <svg *ngFor="let s of [1,2,3,4,5]" width="16" height="16" viewBox="0 0 24 24" [attr.fill]="s <= t.rating ? '#a95e92' : '#e0e0e0'" stroke="none">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+          </div>
+          <p class="testi-content">"{{t.content}}"</p>
+          <div class="testi-author">
+            <div class="testi-avatar">{{t.name.charAt(0)}}{{(t.name.split(' ')[1] || '').charAt(0)}}</div>
+            <div>
+              <div class="testi-name">{{t.name}}</div>
+              <div class="testi-role">{{t.role}}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ PRICING ═══════════ -->
+  <section class="section pricing-section">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-badge">Tarifs</div>
+        <h2>Des plans adaptés à <span class="gradient-text">chaque besoin</span></h2>
+        <p>Commencez gratuitement. Évoluez quand vous êtes prêt.</p>
+      </div>
+      <div class="pricing-grid">
+        <div class="pricing-card reveal">
+          <div class="plan-name">Starter</div>
+          <div class="plan-price">Gratuit</div>
+          <div class="plan-desc">Pour les patients(es)</div>
+          <ul class="plan-features">
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a95e92" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Profil médical sécurisé</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a95e92" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Suivi personnel complet</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a95e92" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Connexion 1 médecin</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a95e92" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Historique illimité</li>
+          </ul>
+          <a routerLink="/public/register-patient" class="btn btn-outline full-width">Commencer</a>
+        </div>
+
+        <div class="pricing-card popular reveal">
+          <div class="popular-badge">Le plus populaire</div>
+          <div class="plan-name">Clinic</div>
+          <div class="plan-price">Sur devis</div>
+          <div class="plan-desc">Pour spécialistes indépendants</div>
+          <ul class="plan-features">
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a95e92" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Dashboard complet</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a95e92" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Analyse IA illimitée</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a95e92" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Jusqu'à 50 patients(es)</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a95e92" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Support prioritaire 24/7</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a95e92" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Export PDF avancé</li>
+          </ul>
+          <button class="btn btn-primary btn-glow full-width">Demander une démo</button>
+        </div>
+
+        <div class="pricing-card reveal">
+          <div class="plan-name">Enterprise</div>
+          <div class="plan-price">Sur mesure</div>
+          <div class="plan-desc">Hôpitaux & Grands centres</div>
+          <ul class="plan-features">
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a95e92" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> API & Intégrations HL7</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a95e92" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Multi-praticiens illimité</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a95e92" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Formation dédiée</li>
+            <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a95e92" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> SLA garanti 99.9%</li>
+          </ul>
+          <button class="btn btn-outline full-width">Contacter les ventes</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ FAQ ═══════════ -->
+  <section id="faq" class="section faq-section">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-badge">FAQ</div>
+        <h2>Questions <span class="gradient-text">fréquentes</span></h2>
+        <p>Tout ce que vous devez savoir avant de commencer.</p>
+      </div>
+      <div class="faq-list reveal">
+        <div class="faq-item" *ngFor="let item of faqItems; let i = index" [class.open]="item.isOpen">
+          <button class="faq-header" (click)="toggleFaq(i)">
+            <span>{{item.question}}</span>
+            <div class="faq-chevron">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </button>
+          <div class="faq-body" *ngIf="item.isOpen" [@fadeInUp]>
+            <p>{{item.answer}}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ CTA BANNER ═══════════ -->
+  <section class="cta-section">
+    <div class="cta-inner">
+      <div class="cta-glow"></div>
+      <div class="container cta-content">
+        <h2>Prêt à transformer le suivi du cancer du sein ?</h2>
+        <p>Rejoignez les milliers de professionnels et patients(es) qui font déjà confiance à BreastIQ.</p>
+        <div class="cta-actions">
+          <a routerLink="/public/register-patient" class="btn btn-xl btn-white">
+            Créer un compte Patient(e)
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+          <a routerLink="/public/register-doctor" class="btn btn-xl btn-outline-white">
+            Espace Médecin
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ FOOTER ═══════════ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <div class="logo">
+            <div class="logo-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            </div>
+            <span class="logo-text" style="color: white;">Breast<span class="logo-accent">IQ</span></span>
+          </div>
+          <p class="footer-tagline">Innovation au service du soin.<br>Détection intelligente, suivi humain.</p>
+        </div>
+        <div class="footer-links-grid">
+          <div class="footer-col">
+            <h4>Produit</h4>
+            <a (click)="scrollToSection('solution')">Solution</a>
+            <a (click)="scrollToSection('features')">Fonctionnalités</a>
+            <a (click)="scrollToSection('security')">Sécurité</a>
+            <a href="#">Tarifs</a>
+          </div>
+          <div class="footer-col">
+            <h4>Légal</h4>
+            <a href="#">Conditions d'utilisation</a>
+            <a href="#">Politique de confidentialité</a>
+            <a href="#">Mentions légales</a>
+            <a href="#">RGPD</a>
+          </div>
+          <div class="footer-col">
+            <h4>Contact</h4>
+            <a href="mailto:support&#64;breastiq.com">support&#64;breastiq.com</a>
+            <a href="#">Centre d'aide</a>
+            <p class="footer-location">Paris, France</p>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; {{currentYear}} BreastIQ. Tous droits réservés.</span>
+        <div class="footer-social">
+          <a href="#" aria-label="LinkedIn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+          </a>
+          <a href="#" aria-label="Twitter">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+</div>

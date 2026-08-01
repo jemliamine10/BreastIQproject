@@ -1,0 +1,316 @@
+<div class="treatment-page">
+  <div class="orb orb--1"></div>
+  <div class="orb orb--2"></div>
+
+  <div class="loading-state" *ngIf="loading">
+    <div class="loading-ring">
+      <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="none" stroke-width="3" stroke="url(#lg)" stroke-dasharray="80 50" stroke-linecap="round"/><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#a95e92"/><stop offset="100%" stop-color="#ebaece"/></linearGradient></defs></svg>
+    </div>
+    <span>Chargement des dossiers…</span>
+  </div>
+
+  <ng-container *ngIf="!loading">
+    <header class="page-header">
+      <div class="header-left">
+        <h1 class="page-title">
+          <span class="title-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13 M8 12h13 M8 18h13 M3 6h.01 M3 12h.01 M3 18h.01"/></svg>
+          </span>
+          Gestion des traitements
+        </h1>
+        <p class="page-subtitle">Planification et suivi des protocoles cliniques</p>
+      </div>
+      <div class="header-stats">
+        <div class="h-stat">
+          <span class="h-stat-num">{{ patients.length }}</span>
+          <span class="h-stat-label">Patients</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="main-grid">
+      <!-- ═══ Patient Selector (Premium Strip) ═══ -->
+      <div class="selector-panel">
+        <div class="selector-top-row">
+          <div class="search-box">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input type="text" [(ngModel)]="searchTerm" placeholder="Rechercher…">
+          </div>
+          <div class="patients-scroll">
+            <div class="patient-chip" *ngFor="let p of filteredPatients"
+                 [class.selected]="selectedPatient?.patientProfileId === p.patientProfileId"
+                 (click)="selectPatient(p)">
+              <div class="chip-avatar">
+                <img *ngIf="getPatientPhoto(p)" [src]="getPatientPhoto(p)" class="avatar-img" alt="Patient">
+                <span *ngIf="!getPatientPhoto(p)">{{ getInitials(p) }}</span>
+              </div>
+              <div class="chip-body">
+                <span class="chip-name">{{ p.firstName }} {{ p.lastName }}</span>
+                <span class="chip-meta">{{ p.email }}</span>
+              </div>
+            </div>
+          </div>
+          <button class="chip-deselect" *ngIf="selectedPatient" (click)="deselectPatient()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="treatment-area" *ngIf="selectedPatient">
+        <div class="content-header glass-card">
+          <div class="patient-hero">
+            <div class="hero-avatar" [class]="getStatusClass(selectedPatient.patientStatus)">
+              <img *ngIf="getPatientPhoto(selectedPatient)" [src]="getPatientPhoto(selectedPatient)" class="avatar-img" alt="Patient">
+              <span *ngIf="!getPatientPhoto(selectedPatient)">{{ getInitials(selectedPatient) }}</span>
+            </div>
+            <div class="hero-text">
+              <div class="hero-top">
+                <h2 class="hero-name">{{ selectedPatient.firstName }} {{ selectedPatient.lastName }}</h2>
+                <span class="hero-status-pill" [class]="getStatusClass(selectedPatient.patientStatus)">
+                  {{ selectedPatient.patientStatus || 'Suivi' }}
+                </span>
+              </div>
+              <p class="hero-meta">
+                {{ selectedPatient.email }}
+                <span class="hero-meta-divider">·</span>
+                ID: {{ selectedPatient.patientProfileId.substring(0,8) }}
+              </p>
+            </div>
+            <div class="header-actions">
+              <button class="btn-secondary" (click)="refreshStatuses()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+                Actualiser
+              </button>
+              <button class="btn-primary" (click)="openCreateForm()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Nouveau protocole
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- No Treatments -->
+        <div class="empty-state" *ngIf="selectedPatientTreatments.length === 0 && !showCreateForm">
+          <div class="empty-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 6h13 M8 12h13 M8 18h13 M3 6h.01 M3 12h.01 M3 18h.01"/></svg>
+          </div>
+          <h3>Aucun traitement en cours</h3>
+          <p>Initialisez un nouveau protocole pour commencer le suivi.</p>
+          <button class="btn-primary" (click)="openCreateForm()">Démarrer un traitement</button>
+        </div>
+
+        <!-- Create Form Card -->
+        <div class="create-card glass-card" *ngIf="showCreateForm">
+          <div class="card-header">
+            <h3 class="card-title">Configuration du protocole</h3>
+            <button class="btn-icon" (click)="showCreateForm = false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          </div>
+          <div class="error-msg" *ngIf="createError">{{ createError }}</div>
+          <div class="form-grid">
+            <div class="input-group">
+              <label>Type de traitement</label>
+              <select [(ngModel)]="createForm.type">
+                <option *ngFor="let t of treatmentTypes" [value]="t">{{ getTreatmentTypeLabel(t) }}</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label>Protocole / Nom</label>
+              <input type="text" [(ngModel)]="createForm.protocol" placeholder="ex: AC-T / Taxol">
+            </div>
+            <div class="input-group">
+              <label>Médicament</label>
+              <input type="text" [(ngModel)]="createForm.medicationName" placeholder="ex: Paclitaxel">
+            </div>
+            <div class="input-group">
+              <label>Dosage</label>
+              <input type="text" [(ngModel)]="createForm.dosage" placeholder="ex: 80mg/m²">
+            </div>
+            <div class="input-group">
+              <label>Date de début</label>
+              <input type="date" [(ngModel)]="createForm.startDate">
+            </div>
+            <div class="input-group">
+              <label>Date de fin (est.)</label>
+              <input type="date" [(ngModel)]="createForm.endDate">
+            </div>
+            <div class="input-group">
+              <label>Cycles totaux</label>
+              <input type="number" [(ngModel)]="createForm.cyclesTotal">
+            </div>
+            <div class="input-group">
+              <label>Intervalle (jours)</label>
+              <input type="number" [(ngModel)]="createForm.intervalDays">
+            </div>
+            <div class="input-group full-width">
+              <label>Notes cliniques</label>
+              <textarea [(ngModel)]="createForm.notes" rows="2" placeholder="Instructions particulières…"></textarea>
+            </div>
+          </div>
+          <div class="form-footer">
+            <button class="btn-text" (click)="showCreateForm = false">Annuler</button>
+            <button class="btn-primary" (click)="submitCreate()" [disabled]="creating">
+              <span *ngIf="!creating">Lancer le protocole</span>
+              <span *ngIf="creating">Création…</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Treatment Cards List -->
+        <div class="treatments-list" *ngIf="selectedPatientTreatments.length > 0">
+          <div class="treatment-card glass-card" *ngFor="let t of selectedPatientTreatments"
+               [class]="getTreatmentStatusClass(t.status)">
+            <div class="t-card-main">
+              <div class="t-type-icon" [class]="t.treatmentType.toLowerCase()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path *ngFor="let d of parsePaths(getTreatmentTypeIcon(t.treatmentType))" [attr.d]="d"/>
+                </svg>
+              </div>
+              <div class="t-info">
+                <div class="t-header">
+                  <h3 class="t-title">{{ t.protocol || getTreatmentTypeLabel(t.treatmentType) }}</h3>
+                  <span class="t-badge" [class]="getTreatmentStatusClass(t.status)">{{ getTreatmentStatusLabel(t.status) }}</span>
+                </div>
+                <p class="t-meds">{{ t.medicationName }} <span *ngIf="t.dosage">· {{ t.dosage }}</span></p>
+                <div class="t-dates">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  {{ formatDate(t.startDate) }} — {{ formatDate(t.endDate) }}
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="progress-wrap" *ngIf="t.cyclesTotal && t.cyclesTotal > 0">
+                  <div class="progress-labels">
+                    <span>Cycle {{ t.currentCycle }} / {{ t.cyclesTotal }}</span>
+                    <span>{{ getCycleProgress(t) | number:'1.0-0' }}%</span>
+                  </div>
+                  <div class="progress-track">
+                    <div class="progress-fill" [style.width.%]="getCycleProgress(t)"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="t-actions">
+                <button class="btn-action" (click)="loadSessions(t.id)" [class.active]="selectedTreatmentId === t.id">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                  Séances
+                </button>
+                <button class="btn-action danger" (click)="deleteTreatment(t.id)">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Sessions Vertical Timeline -->
+            <div class="sessions-timeline" *ngIf="selectedTreatmentId === t.id">
+              <div class="sessions-stats">
+                <div class="s-stat"><span class="val">{{ getDoneCount() }}</span><span class="lab">Terminées</span></div>
+                <div class="s-stat"><span class="val">{{ getPlannedCount() }}</span><span class="lab">À venir</span></div>
+                <div class="s-stat warn"><span class="val">{{ getMissedCount() }}</span><span class="lab">Manquées</span></div>
+              </div>
+
+              <div class="timeline-container">
+                <div class="loading-inline" *ngIf="loadingSessions">Chargement…</div>
+                <div class="timeline-row" *ngFor="let s of sessions" [class]="getSessionStatusClass(s.status)">
+                  <div class="tl-left">
+                    <span class="tl-num">#{{ s.sessionNumber }}</span>
+                  </div>
+                  <div class="tl-connector"><div class="tl-dot"></div></div>
+                  <div class="tl-content glass-card">
+                    <div class="tl-header">
+                      <span class="tl-date">{{ formatDate(s.scheduledDate) }}</span>
+                      <span class="tl-badge" [class]="getSessionStatusClass(s.status)">{{ getSessionStatusLabel(s.status) }}</span>
+                    </div>
+                    <div class="tl-actual" *ngIf="s.actualDate">Complétée le {{ formatDate(s.actualDate) }}</div>
+                    <div class="tl-notes" *ngIf="s.notes || s.sideEffects">
+                      <p *ngIf="s.notes"><strong>Note:</strong> {{ s.notes }}</p>
+                      <p *ngIf="s.sideEffects" class="tl-effects"><strong>Effets:</strong> {{ s.sideEffects }}</p>
+                    </div>
+                    <div class="tl-actions" *ngIf="s.status === 'PLANNED'">
+                      <button class="btn-check" (click)="openSessionAction(s, 'done')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                        Terminer
+                      </button>
+                      <button class="btn-x" (click)="openSessionAction(s, 'missed')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        Manquée
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ PREMIUM HERO — No Selection ═══ -->
+      <div class="treatment-area" *ngIf="!selectedPatient && !loading">
+        <div class="treat-hero">
+          <div class="treat-hero-grid-bg"></div>
+          <div class="treat-hero-glow treat-hero-glow--1"></div>
+          <div class="treat-hero-glow treat-hero-glow--2"></div>
+
+          <div class="treat-hero-content">
+            <span class="treat-hero-eyebrow">💊 Protocoles Cliniques</span>
+            <h2 class="treat-hero-title">Gestion des<br/><span class="treat-hero-grad">Traitements & Suivi</span></h2>
+            <p class="treat-hero-desc">
+              Planifiez les protocoles de chimiothérapie, hormonothérapie et radiothérapie.
+              Suivez chaque séance, enregistrez les effets secondaires et visualisez la progression en temps réel.
+            </p>
+          </div>
+
+          <div class="treat-hero-features">
+            <div class="thf-card thf-proto">
+              <div class="thf-icon">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <h4>Protocoles</h4>
+              <p>Chimio · Hormono · Radio · Immuno · Chirurgie</p>
+            </div>
+            <div class="thf-card thf-session">
+              <div class="thf-icon">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              </div>
+              <h4>Séances</h4>
+              <p>Timeline interactive avec validation et suivi des effets</p>
+            </div>
+            <div class="thf-card thf-progress">
+              <div class="thf-icon">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              </div>
+              <h4>Progression</h4>
+              <p>Visualisation des cycles, pourcentage d'avancement en temps réel</p>
+            </div>
+          </div>
+
+          <p class="treat-hero-hint">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            Sélectionnez un patient ci-dessus pour commencer
+          </p>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- Action Modal -->
+  <div class="modal-overlay" *ngIf="sessionModal" (click)="sessionModal = null">
+    <div class="modal-card glass-card" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <h3>{{ sessionModal.action === 'done' ? 'Valider la séance' : 'Signaler une absence' }}</h3>
+        <span class="modal-subtitle">Séance #{{ sessionModal.session.sessionNumber }} · {{ formatDate(sessionModal.session.scheduledDate) }}</span>
+      </div>
+      <div class="modal-body">
+        <div class="input-group">
+          <label>Notes cliniques</label>
+          <textarea [(ngModel)]="sessionModal.notes" rows="3" placeholder="Observations sur la séance…"></textarea>
+        </div>
+        <div class="input-group" *ngIf="sessionModal.action === 'done'">
+          <label>Effets secondaires rapportés</label>
+          <textarea [(ngModel)]="sessionModal.sideEffects" rows="2" placeholder="Nausées, fatigue intense…"></textarea>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-text" (click)="sessionModal = null">Annuler</button>
+        <button class="btn-primary" (click)="submitSessionAction()">Confirmer</button>
+      </div>
+    </div>
+  </div>
+</div>

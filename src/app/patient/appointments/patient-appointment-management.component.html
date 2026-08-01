@@ -1,0 +1,34 @@
+<section class="patient-rdv-card">
+  <header class="patient-rdv-head">
+    <h3>Gestion des rendez-vous</h3>
+    <span>{{ appointments.length }} element(s)</span>
+  </header>
+
+  @if (loading) {
+    <div class="empty-row">Chargement des rendez-vous...</div>
+  } @else if (!appointments.length) {
+    <div class="empty-row">Aucun rendez-vous a gerer pour le moment.</div>
+  } @else {
+    <div class="rdv-list">
+      @for (appointment of appointments; track trackById($index, appointment)) {
+        <article class="rdv-item">
+          <div class="rdv-meta">
+            <strong>{{ appointment.title }}</strong>
+            <span>{{ appointment.doctor.firstName }} {{ appointment.doctor.lastName }}</span>
+            <small>{{ formatDate(appointment.date) }}</small>
+          </div>
+
+          <div class="rdv-actions">
+            <span class="status-chip" [ngClass]="getStatusClass(appointment.status)">
+              {{ getStatusLabel(appointment.status) }}
+            </span>
+            <button type="button" class="action-link" (click)="openDetails.emit(appointment)">Details</button>
+            <button type="button" class="action-link danger" (click)="cancel.emit(appointment)" [disabled]="!canCancel(appointment.status)">
+              Annuler
+            </button>
+          </div>
+        </article>
+      }
+    </div>
+  }
+</section>

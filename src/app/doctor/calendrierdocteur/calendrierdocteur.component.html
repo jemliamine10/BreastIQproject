@@ -1,0 +1,298 @@
+<div class="premium-calendar-wrapper">
+  
+  <main class="main-content">
+    
+    <!-- Hero Month Title -->
+    <div class="month-hero-title animate-fade-in">
+      <h1 class="hero-month">{{ currentMonthTitle }}</h1>
+      <div class="hero-underline"></div>
+    </div>
+    
+    <!-- Top Compact Header: Stats & Navigation -->
+    <header class="dashboard-stats-header animate-fade-in">
+      <div class="header-main-info">
+        <div class="calendar-nav-group">
+          <button class="nav-btn-lux" (click)="prevMonth()" title="Mois précédent">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          <button class="btn-today-lux" (click)="goToToday()">Aujourd'hui</button>
+          <button class="nav-btn-lux" (click)="nextMonth()" title="Mois suivant">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats row -->
+      <div class="stats-grid-horizontal">
+        <div class="stat-card-lux total"><div class="stat-info"><span class="val">{{ stats.total }}</span><span class="lbl">Total</span></div></div>
+        <div class="stat-card-lux upcoming"><div class="stat-info"><span class="val pulse-text">{{ stats.upcoming }}</span><span class="lbl">À venir</span></div></div>
+        <div class="stat-card-lux done"><div class="stat-info"><span class="val">{{ stats.done }}</span><span class="lbl">Fait</span></div></div>
+      </div>
+    </header>
+
+    <!-- ═══ Patient Selector (Horizontal Strip) ═══ -->
+    <section class="patient-selector-lux animate-slide-up">
+      <div class="selector-inner">
+        <div class="patient-chip-lux" 
+             *ngFor="let p of patients"
+             [class.active]="selectedPatient?.patientProfileId === p.patientProfileId"
+             (click)="selectPatient(p)">
+          <div class="chip-avatar-lux">
+            <img *ngIf="getPatientPhoto(p)" [src]="getPatientPhoto(p)" class="avatar-img" alt="Patient">
+            <span *ngIf="!getPatientPhoto(p)">{{ getInitials(p) }}</span>
+          </div>
+          <div class="chip-name-lux">{{ p.firstName }} {{ p.lastName }}</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filter Bar - Luxury Integrated -->
+    <section class="filter-bar-lux animate-slide-up">
+      <div class="filter-inputs">
+        <div class="input-wrap">
+          <select [(ngModel)]="filterStatus" (change)="applyFilters()" class="lux-select">
+            <option value="">Tous les statuts</option>
+            <option value="CONFIRMED">Prévu / Confirmé</option>
+            <option value="UPCOMING">À venir</option>
+            <option value="REQUESTED">En attente (À confirmer)</option>
+            <option value="COMPLETED">Terminé</option>
+            <option value="CANCELLED">Annulé</option>
+            <option value="NO_SHOW">Absent (Non-venu)</option>
+          </select>
+        </div>
+        <div class="input-wrap search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="search-ico"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" placeholder="Rechercher par nom ou MRN..." [(ngModel)]="filterPatientId" (keyup)="applyFilters()" class="lux-input" />
+        </div>
+      </div>
+      
+      <div class="view-toggle-lux">
+        <button class="toggle-btn" [class.active]="viewMode === 'month'" (click)="viewMode = 'month'">Mensuel</button>
+        <button class="toggle-btn" [class.active]="viewMode === 'list'" (click)="viewMode = 'list'">Liste</button>
+      </div>
+
+      <button class="btn-clear-lux" (click)="filterStatus=''; filterPatientId=''; selectedPatient=null; applyFilters()" *ngIf="filterStatus || filterPatientId || selectedPatient">
+        Effacer les filtres
+      </button>
+    </section>
+
+    <!-- Calendar Viewport -->
+    <div class="calendar-viewport" [ngSwitch]="viewMode">
+      
+      <!-- Month Grid -->
+      <div class="month-grid-card animate-fade-in" *ngSwitchCase="'month'">
+        <div class="weekdays-lux">
+          <div class="wd" *ngFor="let day of weekDays">{{ day }}</div>
+        </div>
+        
+        <div class="grid-lux">
+          <div class="cell-lux" 
+               *ngFor="let day of calendarDays" 
+               [class.other-month]="!day.isCurrentMonth"
+               [class.is-today]="day.isToday"
+               [class.is-selected]="day.isSelected"
+               (click)="selectDate(day)">
+            
+            <div class="cell-head">
+              <span class="num">{{ day.date | date:'d' }}</span>
+              <span class="dot-indicator" *ngIf="day.appointments.length > 0"></span>
+            </div>
+
+            <div class="cell-content-mini">
+              <div class="mini-entry" *ngFor="let app of day.appointments | slice:0:2" [ngClass]="getStatusClass(app.status)">
+                {{ formatTime(app.startAt) }}
+              </div>
+              <div class="entry-more" *ngIf="day.appointments.length > 2">
+                +{{ day.appointments.length - 2 }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- List View -->
+      <div class="list-view-lux animate-slide-up" *ngSwitchCase="'list'">
+        <div class="empty-state" *ngIf="filteredAppointments.length === 0">
+          <div class="empty-icon">✨</div>
+          <h3>Aucun rendez-vous trouvé</h3>
+          <p>Essayez de modifier vos filtres ou sélectionnez une autre période.</p>
+        </div>
+
+        <div class="appointment-row-lux" *ngFor="let app of filteredAppointments" [ngClass]="getStatusClass(app.status)">
+          <div class="row-time">
+            <strong>{{ app.startAt | date:'dd MMM' }}</strong>
+            <span>{{ formatTime(app.startAt) }}</span>
+          </div>
+          <div class="row-main">
+            <h4>{{ app.reason || 'Consultation Standard' }}</h4>
+            <p>Patiente: <strong>{{ getPatientName(app.patientProfileId) }}</strong></p>
+          </div>
+          <div class="row-status">
+            <span class="status-pill-lux {{ getStatusClass(app.status) }}">{{ getStatusLabel(app.status) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Selected Day Details Panel -->
+    <section class="day-focus-panel animate-slide-up" *ngIf="viewMode === 'month'">
+      <div class="panel-header">
+        <div class="date-title">
+          <p>Détails du jour</p>
+          <h3>{{ currentDayTitle }}</h3>
+        </div>
+        <div class="daily-stat">{{ selectedDateAppointments.length }} consultations</div>
+      </div>
+
+      <div class="panel-content">
+        <!-- FIXED ANGULAR ERROR HERE: Removed dual structural directive binding -->
+        <div class="empty-focus-card" *ngIf="selectedDateAppointments.length === 0">
+          <div class="empty-focus-illustration">
+            <span class="sparkle-lg">✨</span>
+            <div class="halo"></div>
+          </div>
+          <h3>Journée de repos</h3>
+          <p>Aucun rendez-vous n'est planifié pour ce jour. Profitez de ce temps pour vous ressourcer !</p>
+        </div>
+
+        <div class="appointment-card-premium" *ngFor="let app of selectedDateAppointments" [style.border-left-color]="getStatusColor(app.status)">
+          <div class="card-lux-time">
+            <span class="sh">{{ formatTime(app.startAt) }}</span>
+            <span class="eh" *ngIf="app.endAt">{{ formatTime(app.endAt) }}</span>
+          </div>
+          <div class="card-lux-body">
+            <div class="card-lux-header">
+              <span class="patient-id-tag">{{ getPatientName(app.patientProfileId) }}</span>
+              <span class="status-badge-lux {{ getStatusClass(app.status) }}">{{ getStatusLabel(app.status) }}</span>
+            </div>
+            <h4 class="consultation-reason">{{ app.reason || 'Consultation de suivi' }}</h4>
+            <div class="card-lux-meta">
+              <div class="meta-bit" *ngIf="app.mode">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                <span>{{ app.mode }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-lux-actions">
+            <button class="btn-details-lux" (click)="viewDetails(app)">Voir détails</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Patient History Section (Ultra Wow) ═══ -->
+    <section class="historique-patient-container animate-slide-up" *ngIf="selectedPatient">
+      <div class="history-header">
+        <div class="header-text">
+          <span class="subtitle">Parcours de soins</span>
+          <h3>Historique des rendez-vous : {{ selectedPatient.firstName }} {{ selectedPatient.lastName }}</h3>
+        </div>
+        <div class="history-badge" *ngIf="!historyLoading">
+          {{ patientHistory.length }} séances
+        </div>
+      </div>
+
+      <div class="history-loading-spinner" *ngIf="historyLoading">
+        <div class="mini-spinner"></div>
+        <span>Récupération de l'historique...</span>
+      </div>
+
+      <div class="history-empty" *ngIf="!historyLoading && patientHistory.length === 0">
+        <div class="empty-icon-box">📅</div>
+        <p>Aucun antécédent de rendez-vous trouvé avec cette patiente.</p>
+      </div>
+
+      <div class="history-scroll-grid" *ngIf="!historyLoading && patientHistory.length > 0">
+        <div class="history-card-lux" *ngFor="let h of patientHistory" (click)="viewHistoryDetails(h)">
+          <div class="h-card-top">
+            <span class="h-date">{{ h.date | date:'dd MMMM yyyy' }}</span>
+            <span class="h-status {{ getStatusClass(h.status) }}">{{ getStatusLabel(h.status) }}</span>
+          </div>
+          <div class="h-card-body">
+            <h4 class="h-title">{{ h.title || h.type || 'Consultation' }}</h4>
+            <p class="h-desc" *ngIf="h.description">{{ h.description | slice:0:80 }}{{ h.description.length > 80 ? '...' : '' }}</p>
+          </div>
+          <div class="h-card-footer">
+            <div class="h-type">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+              <span>{{ h.type }}</span>
+            </div>
+            <button class="h-btn-consult">Consulter</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ═══ History Details Modal (High End) ═══ -->
+  <div class="history-details-modal-overlay" *ngIf="showHistoryDetails" (click)="closeHistoryDetails()">
+    <div class="history-details-modal-lux" (click)="$event.stopPropagation()">
+      <div class="modal-header-glass">
+        <div class="header-content">
+          <span class="type-tag">{{ selectedHistoryApp?.type }}</span>
+          <h2>Détails du Rendez-vous</h2>
+          <p class="modal-date">{{ selectedHistoryApp?.date | date:'EEEE dd MMMM yyyy' }} à {{ formatTime(selectedHistoryApp?.date) }}</p>
+        </div>
+        <button class="close-modal-glass" (click)="closeHistoryDetails()">&times;</button>
+      </div>
+
+      <div class="modal-body-content">
+        <div class="detail-section">
+          <label>Motif / Titre</label>
+          <p class="detail-val emphasis">{{ selectedHistoryApp?.title || 'Non renseigné' }}</p>
+        </div>
+
+        <div class="detail-group">
+          <div class="detail-section half">
+            <label>Statut</label>
+            <div class="status-indicator">
+              <span class="dot {{ getStatusClass(selectedHistoryApp?.status) }}"></span>
+              <span class="val">{{ getStatusLabel(selectedHistoryApp?.status) }}</span>
+            </div>
+          </div>
+          <div class="detail-section half">
+            <label>Emplacement</label>
+            <p class="detail-val">{{ selectedHistoryApp?.location || 'Cabinet Principal' }}</p>
+          </div>
+        </div>
+
+        <div class="detail-section" *ngIf="selectedHistoryApp?.description">
+          <label>Description du cas</label>
+          <div class="notes-bubble">
+            {{ selectedHistoryApp?.description }}
+          </div>
+        </div>
+
+        <div class="detail-section" *ngIf="selectedHistoryApp?.notes && selectedHistoryApp.notes.length > 0">
+          <label>Notes cliniques</label>
+          <div class="notes-list-lux">
+            <div class="note-item" *ngFor="let note of selectedHistoryApp.notes">
+              {{ note }}
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer-lux">
+          <button class="btn-close-modal-lux" (click)="closeHistoryDetails()">Fermer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div class="lux-loading-overlay" *ngIf="isLoading">
+    <div class="loader-container">
+      <div class="premium-spinner"></div>
+      <p>Synchronisation en cours...</p>
+    </div>
+  </div>
+
+  <!-- Error Toast -->
+  <div class="lux-error-toast" *ngIf="error">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+    <span>{{ error }}</span>
+    <button (click)="error=''" class="close-err-btn">&times;</button>
+  </div>
+
+</div>

@@ -1,0 +1,191 @@
+<div class="container-v4 animate-fade-in">
+
+  <!-- ── LUXURY HEADER ── -->
+  <header class="header-v4">
+    <div class="title-v4">
+      <h1>Vos Praticiens</h1>
+      <p>Gérez votre équipe médicale et trouvez de nouveaux experts certifiés.</p>
+    </div>
+
+    <div class="tabs-v4">
+      <button class="tab-btn" [class.active]="activeTab === 'team'" (click)="activeTab = 'team'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        Mon Équipe
+      </button>
+      <button class="tab-btn" [class.active]="activeTab === 'directory'" (click)="activeTab = 'directory'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        Annuaire
+        <span class="badge" *ngIf="pendingRequests.length > 0"></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── SMART FILTER BAR ── -->
+  <div class="filters-wrap animate-slide-up">
+    <div class="search-field">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="color: var(--old-rose); opacity: 0.6;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input type="text" [(ngModel)]="searchQuery" placeholder="Rechercher par nom, ville ou spécialité..." />
+
+      @if (activeTab === 'directory') {
+        <div style="border-left: 1px solid var(--border-light); padding-left: 16px;">
+          <select [(ngModel)]="selectedSpecialty">
+            <option [ngValue]="null">Toutes spécialités</option>
+            @for (spec of specialties; track spec) {
+              <option [value]="spec">{{ formatSpecialty(spec) }}</option>
+            }
+          </select>
+        </div>
+      }
+    </div>
+
+    <button class="ghost-btn" (click)="refreshData()" title="Actualiser" style="height: 52px; width: 52px; padding: 0;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" [class.spin]="loading"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+    </button>
+  </div>
+
+  <!-- ── LOADING OVERLAY ── -->
+  @if (loading) {
+    <div class="empty-state" style="border: none; background: none;">
+      <div class="loading-spinner" style="margin: 0 auto 16px;"></div>
+      <p style="font-weight: 800; color: var(--old-rose); opacity: 0.8;">Chargement de votre réseau médical...</p>
+    </div>
+  }
+
+  <!-- ── TAB: MON ÉQUIPE ── -->
+  @if (!loading && activeTab === 'team') {
+    <div class="doctors-grid">
+      
+      @if (pendingRequests.length > 0) {
+        <div class="doc-card" style="grid-column: 1 / -1; border-style: dashed; border-color: var(--old-rose); background: rgba(169, 94, 146, 0.03);">
+          <div class="card-head" style="gap: 16px;">
+            <div class="avatar-fallback" style="width: 50px; height: 50px; font-size: 1.2rem;">!</div>
+            <div class="info">
+              <h3 style="margin-bottom: 2px;">Demandes en attente</h3>
+              <p style="margin: 0;">Vous avez <strong>{{ pendingRequests.length }}</strong> demande(s) de connexion active(s).</p>
+            </div>
+            <div style="margin-left: auto;">
+              <button class="secondary-btn" (click)="activeTab = 'directory'" style="padding: 8px 16px; border-radius: 99px; font-weight: 700; border: 1px solid var(--old-rose); color: var(--old-rose); background: none; cursor: pointer;">Gérer les demandes</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      @for (doc of filteredMyDoctors; track doc.doctorProfileId) {
+        <div class="doc-card animate-slide-up">
+          <div class="card-head">
+            <div class="avatar-wrapper">
+              @if (doc.profilePhotoUrl) {
+                <img [src]="doc.profilePhotoUrl" class="avatar" alt="Avatar">
+              } @else {
+                <div class="avatar-fallback">{{ getInitials(doc) }}</div>
+              }
+              <div class="status-dot"></div>
+            </div>
+            <div class="info">
+              <span class="specialty">{{ formatSpecialty(doc.doctorType) }}</span>
+              <h3>Dr. {{ doc.firstName }} {{ doc.lastName }}</h3>
+              <div class="location">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                {{ doc.city || 'Non renseigné' }}
+              </div>
+            </div>
+          </div>
+          
+          <div class="tags">
+            <span class="tag">Mode: {{ formatConsultation(doc.consultationMode) }}</span>
+            <span class="tag" *ngIf="doc.consultationFee">{{ doc.consultationFee }}€ / seance</span>
+            <span class="tag">{{ doc.yearsOfExperience || 0 }} ans d'exp.</span>
+          </div>
+
+          <div class="card-actions">
+            <button class="btn-secondary" (click)="sendMessage(doc)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-13.5 8.38 8.38 0 0 1 3.8.9L21 3.5v8z"></path></svg>
+              Message
+            </button>
+            <button class="btn-primary" (click)="bookAppointment(doc)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              RDV
+            </button>
+          </div>
+        </div>
+      }
+
+      @if (filteredMyDoctors.length === 0 && !loading) {
+        <div class="empty-state">
+          <div class="empty-icon">🏥</div>
+          <h3>Votre équipe est vide</h3>
+          <p>Utilisez l'annuaire pour rechercher et vous connecter avec des spécialistes certifiés.</p>
+          <button class="btn-primary" (click)="activeTab = 'directory'" style="margin-top: 24px; max-width: 300px; margin-left: auto; margin-right: auto;">Accéder à l'annuaire</button>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ── TAB: ANNUAIRE ── -->
+  @if (!loading && activeTab === 'directory') {
+    <div class="doctors-grid">
+      @for (doc of filteredDirectory; track doc.doctorProfileId) {
+        <div class="doc-card animate-slide-up">
+          <div class="card-head">
+            <div class="avatar-wrapper">
+              @if (doc.profilePhotoUrl) {
+                <img [src]="doc.profilePhotoUrl" class="avatar" alt="Avatar">
+              } @else {
+                <div class="avatar-fallback" style="background: linear-gradient(135deg, #e0e7ff, #c7d2fe); color: #4338ca;">{{ getInitials(doc) }}</div>
+              }
+            </div>
+            <div class="info">
+              <span class="specialty" style="color: #64748b;">{{ formatSpecialty(doc.doctorType) }}</span>
+              <h3>Dr. {{ doc.firstName }} {{ doc.lastName }}</h3>
+              <div class="location">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                {{ doc.city || 'Cabinet Privé' }}
+              </div>
+            </div>
+          </div>
+
+          <div class="tags">
+            <span class="tag" *ngIf="doc.clinicName">{{ doc.clinicName }}</span>
+            <span class="tag">{{ doc.yearsOfExperience || 0 }} ans d'expérience</span>
+          </div>
+
+          <div class="card-actions">
+            @if (isPending(doc)) {
+              <button class="btn-secondary" disabled style="opacity: 0.7; width: 100%; border-style: dashed; background: rgba(22, 21, 69, 0.02);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                Demande envoyée
+              </button>
+            } @else {
+              <button class="btn-primary" 
+                  (click)="sendRequest(doc)" 
+                  [disabled]="processingAction[doc.doctorProfileId]"
+                  style="width: 100%; background: var(--deep-blue);">
+                @if (processingAction[doc.doctorProfileId]) {
+                  <span class="loading-spinner" style="width: 14px; height: 14px; border-width: 2px;"></span>
+                } @else {
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                  Se connecter
+                }
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      @if (filteredDirectory.length === 0 && !loading) {
+        <div class="empty-state">
+          <div class="empty-icon">🔍</div>
+          <h3>Aucun expert trouvé</h3>
+          <p>Essayez d'élargir vos critères de recherche ou de changer de ville.</p>
+        </div>
+      }
+    </div>
+  }
+
+</div>
+
+<!-- ── AMBIENT GLASS BACKDROP ── -->
+<div class="ambient-v4" style="background: fixed; z-index: -2;">
+  <div class="orb orb-1" style="background: radial-gradient(circle, var(--lumi-pink) 0%, transparent 60%); width: 800px; height: 800px; top: -100px; right: -100px; filter: blur(120px); opacity: 0.3;"></div>
+  <div class="orb orb-2" style="background: radial-gradient(circle, var(--soft-pink) 0%, transparent 60%); width: 600px; height: 600px; bottom: -100px; left: -100px; filter: blur(100px); opacity: 0.2;"></div>
+</div>

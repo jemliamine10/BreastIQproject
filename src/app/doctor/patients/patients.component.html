@@ -1,0 +1,793 @@
+<div class="patients-page">
+  <div class="orb orb--1"></div>
+  <div class="orb orb--2"></div>
+  <div class="orb orb--3"></div>
+
+  <!-- ═══ Loading ═══ -->
+  <div class="loading-state" *ngIf="loading">
+    <div class="loading-ring">
+      <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="none" stroke-width="3" stroke="url(#lgPat)" stroke-dasharray="80 50" stroke-linecap="round"/><defs><linearGradient id="lgPat" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#a95e92"/><stop offset="100%" stop-color="#ebaece"/></linearGradient></defs></svg>
+    </div>
+    <span>Chargement des dossiers patients…</span>
+  </div>
+
+  <ng-container *ngIf="!loading">
+    <!-- ═══ Header ═══ -->
+    <header class="page-header">
+      <div class="header-left">
+        <h1 class="page-title">
+          <span class="title-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </span>
+          Dossiers Patients
+        </h1>
+        <p class="page-subtitle">Gestion centralisée des données cliniques et historiques médicaux</p>
+      </div>
+      <div class="header-stats">
+        <div class="h-stat">
+          <span class="h-stat-num">{{ patients.length }}</span>
+          <span class="h-stat-label">Total Patients</span>
+        </div>
+        <div class="h-stat">
+          <span class="h-stat-num">{{ getActiveCount() }}</span>
+          <span class="h-stat-label">Stables</span>
+        </div>
+        <div class="h-stat">
+          <span class="h-stat-num">{{ getCriticalCount() }}</span>
+          <span class="h-stat-label">Critiques</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="main-grid">
+      <!-- ═══════ Patient Selector (Premium Strip) ═══════ -->
+      <div class="selector-panel">
+        <div class="selector-top-row">
+          <div class="search-box">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input type="text" [(ngModel)]="searchTerm" placeholder="Rechercher un patient…">
+          </div>
+          <div class="patients-list">
+            <div class="patient-chip" *ngFor="let p of filteredPatients"
+                 [class.selected]="selectedPatient?.patientProfileId === p.patientProfileId"
+                 (click)="selectPatient(p)">
+              <div class="chip-avatar" [class]="getStatusClass(p.patientStatus)">
+                <img *ngIf="getPatientPhoto(p)" [src]="getPatientPhoto(p)" class="avatar-img" alt="Patient">
+                <span *ngIf="!getPatientPhoto(p)">{{ getInitials(p) }}</span>
+              </div>
+              <div class="chip-info">
+                <span class="chip-name">{{ p.firstName }} {{ p.lastName }}</span>
+                <span class="chip-email">{{ p.email }}</span>
+              </div>
+              <div class="chip-score" [class]="getStatusClass(p.patientStatus)">{{ p.healthScore }}</div>
+            </div>
+          </div>
+          <button class="chip-deselect" *ngIf="selectedPatient" (click)="deselectPatient()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ═══════ Patient Detail (Tabbed) ═══════ -->
+      <div class="detail-area" *ngIf="selectedPatient">
+        <div class="detail-loading-overlay" *ngIf="loadingDetail">
+          <div class="loading-ring small">
+            <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="none" stroke-width="3" stroke="url(#lgPat2)" stroke-dasharray="80 50" stroke-linecap="round"/><defs><linearGradient id="lgPat2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#a95e92"/><stop offset="100%" stop-color="#ebaece"/></linearGradient></defs></svg>
+          </div>
+        </div>
+
+        <!-- Hero -->
+        <div class="content-header glass-card">
+          <div class="patient-hero">
+            <div class="hero-avatar" [class]="getStatusClass(selectedPatient.patientStatus)">
+              <img *ngIf="getPatientPhoto(selectedPatient)" [src]="getPatientPhoto(selectedPatient)" class="avatar-img" alt="Patient">
+              <span *ngIf="!getPatientPhoto(selectedPatient)">{{ getInitials(selectedPatient) }}</span>
+            </div>
+            <div class="hero-text">
+              <div class="hero-top">
+                <h2 class="hero-name">{{ selectedPatient.firstName }} {{ selectedPatient.lastName }}</h2>
+                <span class="hero-status-pill" [class]="getStatusClass(selectedPatient.patientStatus)">{{ getStatusLabel(selectedPatient.patientStatus) }}</span>
+              </div>
+              <p class="hero-meta">
+                {{ selectedPatient.email }}
+                <span class="hero-meta-divider">·</span>
+                Né(e) le {{ formatDate(selectedPatient.dateOfBirth) }}
+                <span class="hero-meta-divider" *ngIf="selectedPatient.dateOfBirth">·</span>
+                <span *ngIf="selectedPatient.dateOfBirth">{{ getAge(selectedPatient.dateOfBirth) }} ans</span>
+                <span class="hero-meta-divider" *ngIf="selectedPatient.phone">·</span>
+                <span *ngIf="selectedPatient.phone">{{ selectedPatient.phone }}</span>
+              </p>
+            </div>
+            <!-- Health Score Donut -->
+            <div class="hero-score-ring">
+              <div class="score-donut-wrap">
+                <svg width="76" height="76" viewBox="0 0 76 76">
+                  <circle class="score-donut-bg" cx="38" cy="38" r="32"/>
+                  <circle class="score-donut-fill"
+                          [class]="getStatusClass(selectedPatient.patientStatus)"
+                          cx="38" cy="38" r="32"
+                          [attr.stroke-dasharray]="getDonutDash(selectedPatient.healthScore)"
+                          stroke-dashoffset="0"/>
+                </svg>
+                <div class="score-center">
+                  <span class="value">{{ selectedPatient.healthScore }}</span>
+                  <span class="label">Score Santé</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabs -->
+          <nav class="tabs-nav">
+            <button class="tab-link" [class.active]="activeTab === 'dossier'" (click)="setActiveTab('dossier')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:4px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              Dossier Médical
+            </button>
+            <button class="tab-link" [class.active]="activeTab === 'overview'" (click)="setActiveTab('overview')">Aperçu</button>
+            <button class="tab-link" [class.active]="activeTab === 'clinical'" (click)="setActiveTab('clinical')">Données Cliniques</button>
+            <button class="tab-link" [class.active]="activeTab === 'timeline'" (click)="setActiveTab('timeline')">Timeline</button>
+            <button class="tab-link" [class.active]="activeTab === 'alerts'" (click)="setActiveTab('alerts')">Alertes <span class="badge red" *ngIf="selectedAlerts.length > 0">{{ selectedAlerts.length }}</span></button>
+            <button class="tab-link" [class.active]="activeTab === 'history'" (click)="setActiveTab('history')">Historique</button>
+          </nav>
+        </div>
+
+        <!-- ──────────────────────────────────────────────────────────
+             TAB 2 · DOSSIER MÉDICAL (SYNC WITH PATIENT DESIGN)
+             ────────────────────────────────────────────────────────── -->
+        <div class="tab-content dossier-tab" *ngIf="activeTab === 'dossier'">
+          <div class="mr-page-internal" *ngIf="selectedRecord; else noRecord">
+            
+            <!-- Ambient orbs for internal dossier -->
+            <div class="orb-mr orb-1-mr"></div>
+            <div class="orb-mr orb-2-mr"></div>
+
+            <!-- ─── KPI CARDS ─── -->
+            <section class="kpi-row-mr">
+              @for (k of dossierKpis; track k.label; let i = $index) {
+              <article class="kpi-card-mr" [style.animation-delay]="(i*0.08)+'s'">
+                <div class="kpi-icon-mr" [style.background]="k.color">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                    @for (p of parsePaths(k.icon); track $index) { <path [attr.d]="p" /> }
+                  </svg>
+                </div>
+                <div class="kpi-body-mr">
+                  <span class="kpi-label-mr">{{ k.label }}</span>
+                  <span class="kpi-value-mr">{{ k.value }}</span>
+                  <span class="kpi-sub-mr">{{ k.sub }}</span>
+                </div>
+                @if (i === 0) {
+                <span class="bmi-badge-mr" [class]="getBmiStatus().cls">{{ getBmiStatus().label }}</span>
+                }
+              </article>
+              }
+            </section>
+
+            <!-- ─── INTERNAL TAB NAV ─── -->
+            <nav class="tab-nav-mr">
+              @for (tab of dossierTabs; track tab.id) {
+              <button class="tab-btn-mr" [class.active]="activeDossierTab === tab.id" (click)="setDossierTab(tab.id)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  @for (p of parsePaths(tab.icon); track $index) { <path [attr.d]="p" /> }
+                </svg>
+                {{ tab.label }}
+              </button>
+              }
+            </nav>
+
+            <!-- ─── INTERNAL TAB CONTENT ─── -->
+            <div class="tab-content-mr">
+              
+              <!-- SUB-TAB: APERÇU -->
+              @if (activeDossierTab === 'overview') {
+              <div class="overview-grid-mr">
+                <!-- Info card -->
+                <article class="glass-card-mr wide">
+                  <div class="card-header-mr">
+                    <h3 class="card-title-mr">
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                      Informations Générales
+                    </h3>
+                  </div>
+                  <div class="info-grid-mr">
+                    <div class="info-item-mr"><span class="i-label">Taille</span><span class="i-value">{{ selectedRecord.heightCm || 0 }} cm</span></div>
+                    <div class="info-item-mr"><span class="i-label">Poids</span><span class="i-value">{{ selectedRecord.weightKg || 0 }} kg</span></div>
+                    <div class="info-item-mr"><span class="i-label">IMC</span><span class="i-value">{{ calcBMI(selectedRecord.heightCm, selectedRecord.weightKg) }}</span></div>
+                    <div class="info-item-mr"><span class="i-label">Groupe</span><span class="i-value">{{ getBloodTypeLabel(selectedRecord.bloodType) }}</span></div>
+                    <div class="info-item-mr"><span class="i-label">Dossier N°</span><span class="i-value mono">{{ selectedPatient.medicalRecordNumber || '—' }}</span></div>
+                    <div class="info-item-mr"><span class="i-label">Urgence</span><span class="i-value">{{ selectedPatient.emergencyContactName || '—' }}</span></div>
+                    <div class="info-item-mr"><span class="i-label">Tél Urgence</span><span class="i-value mono">{{ selectedPatient.emergencyContactPhone || '—' }}</span></div>
+                    <div class="info-item-mr">
+                      <span class="i-label">Consentement</span>
+                      <span class="i-value"><span class="consent-tag-mr" [class.on]="selectedPatient.medicalConsent">{{ selectedPatient.medicalConsent ? 'Accordé ✓' : 'Non accordé' }}</span></span>
+                    </div>
+                  </div>
+                </article>
+
+                <!-- Allergy quick -->
+                <article class="glass-card-mr">
+                  <div class="card-header-mr"><h3 class="card-title-mr">Allergies ({{ selectedRecord.allergies.length || 0 }})</h3></div>
+                  <div class="quick-list-mr">
+                    @for (a of selectedRecord.allergies.slice(0,3); track a.id) {
+                    <div class="quick-row-mr" [class]="getSeverityClass(a.severity)">
+                      <span class="qdot-mr" [class]="getSeverityClass(a.severity)"></span>
+                      <span class="qname-mr">{{ a.substance }}</span>
+                      <span class="qbadge-mr" [class]="getSeverityClass(a.severity)">{{ getSeverityLabel(a.severity) }}</span>
+                    </div>
+                    }
+                  </div>
+                  <button class="link-btn-mr" (click)="setDossierTab('allergies')">Voir tout →</button>
+                </article>
+
+                <!-- Treatment quick -->
+                <article class="glass-card-mr">
+                  <div class="card-header-mr"><h3 class="card-title-mr">Traitements ({{ selectedRecord.treatments.length || 0 }})</h3></div>
+                  <div class="quick-list-mr">
+                    @for (t of selectedRecord.treatments.slice(0,3); track t.id) {
+                    <div class="quick-row-mr" [class]="getTreatmentDisplayStatus(t)">
+                      <span class="qdot-mr" [class]="getTreatmentDisplayStatus(t)"></span>
+                      <span class="qname-mr">{{ t.medicationName || t.treatmentType }}</span>
+                      <span class="qbadge-mr" [class]="getTreatmentDisplayStatus(t)">{{ getTreatmentDisplayStatusLabel(t) }}</span>
+                    </div>
+                    }
+                  </div>
+                  <button class="link-btn-mr" (click)="setDossierTab('treatments')">Voir tout →</button>
+                </article>
+
+                <!-- Diagnostic -->
+                <article class="diag-banner-mr">
+                  <div class="diag-icon-mr"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+                  <div class="diag-body-mr">
+                    <span class="diag-label-mr">Diagnostic principal</span>
+                    <h3 class="diag-value-mr">{{ selectedRecord.diagnosis || 'Diagnostic non spécifié' }}</h3>
+                    <p class="diag-detail-mr">{{ getStageLabel(selectedRecord.cancerStage) }} · {{ getTumorTypeLabel(selectedRecord.tumorType) }} · Grade {{ selectedRecord.tumorGrade || '—' }}</p>
+                  </div>
+                  <span class="diag-status-mr">{{ selectedPatient.patientStatus || 'Suivi' }}</span>
+                </article>
+
+                <!-- ═══ STAGING DASHBOARD (Doctor Side) ═══ -->
+                @if (hasStagingData) {
+                <article class="staging-dashboard-mr wide">
+                  <div class="staging-header-mr">
+                    <div class="staging-header-left-mr">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                      <h3 class="staging-title-mr">Classification TNM & Stadification</h3>
+                    </div>
+                    @if (stagingData.autoComputed) {
+                    <span class="auto-badge-mr">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+                      Auto-calculé
+                    </span>
+                    }
+                  </div>
+
+                  <div class="staging-body-mr">
+                    <!-- Stage Ring -->
+                    <div class="stage-ring-wrap-mr">
+                      <div class="stage-ring-mr" [style.--stage-color]="getStageColor(stagingData.stage)" [style.--stage-pct]="getStageProgress(stagingData.stage) + '%'">
+                        <svg viewBox="0 0 80 80" class="ring-svg-mr">
+                          <circle cx="40" cy="40" r="34" class="ring-track-mr"/>
+                          <circle cx="40" cy="40" r="34" class="ring-fill-mr" [style.stroke]="getStageColor(stagingData.stage)" [style.stroke-dasharray]="(getStageProgress(stagingData.stage) / 100 * 213.6) + ' ' + (213.6 - getStageProgress(stagingData.stage) / 100 * 213.6)"/>
+                        </svg>
+                        <div class="ring-center-mr">
+                          <span class="ring-num-mr" [style.color]="getStageColor(stagingData.stage)">{{ getStageNumber(stagingData.stage) }}</span>
+                          <span class="ring-label-mr">{{ stagingData.stageLabel }}</span>
+                        </div>
+                      </div>
+                      @if (stagingData.computedStageLabel) {
+                      <span class="tnm-full-label-mr">{{ stagingData.computedStageLabel }}</span>
+                      }
+                    </div>
+
+                    <!-- TNM Tiles -->
+                    <div class="tnm-grid-mr">
+                      <div class="tnm-tile-mr t-tile">
+                        <span class="tnm-letter-mr">T</span>
+                        <span class="tnm-val-mr">{{ stagingData.tnmT }}</span>
+                        <span class="tnm-desc-mr">Tumeur</span>
+                        @if (stagingData.tumorSizeMm) {
+                        <span class="tnm-detail-mr">{{ stagingData.tumorSizeMm }} mm</span>
+                        }
+                      </div>
+                      <div class="tnm-tile-mr n-tile">
+                        <span class="tnm-letter-mr">N</span>
+                        <span class="tnm-val-mr">{{ stagingData.tnmN }}</span>
+                        <span class="tnm-desc-mr">Ganglions</span>
+                        @if (stagingData.lymphNodes !== null) {
+                        <span class="tnm-detail-mr">{{ stagingData.lymphNodes }} envahi{{ stagingData.lymphNodes > 1 ? 's' : '' }}</span>
+                        }
+                      </div>
+                      <div class="tnm-tile-mr m-tile" [class.metastasis-positive]="stagingData.metastasis">
+                        <span class="tnm-letter-mr">M</span>
+                        <span class="tnm-val-mr">{{ stagingData.tnmM }}</span>
+                        <span class="tnm-desc-mr">Métastases</span>
+                        <span class="tnm-detail-mr">{{ stagingData.metastasis ? 'Détectées' : 'Aucune' }}</span>
+                      </div>
+                    </div>
+
+                    <!-- Receptor Panel -->
+                    <div class="receptor-panel-mr">
+                      <h4 class="receptor-heading-mr">Profil Récepteurs</h4>
+                      <div class="receptor-grid-mr">
+                        <div class="receptor-item-mr" [class]="getReceptorClass(stagingData.erStatus)">
+                          <span class="receptor-name-mr">ER</span>
+                          <span class="receptor-dot-mr" [class]="getReceptorClass(stagingData.erStatus)"></span>
+                          <span class="receptor-val-mr">{{ getReceptorLabel(stagingData.erStatus) }}</span>
+                        </div>
+                        <div class="receptor-item-mr" [class]="getReceptorClass(stagingData.prStatus)">
+                          <span class="receptor-name-mr">PR</span>
+                          <span class="receptor-dot-mr" [class]="getReceptorClass(stagingData.prStatus)"></span>
+                          <span class="receptor-val-mr">{{ getReceptorLabel(stagingData.prStatus) }}</span>
+                        </div>
+                        <div class="receptor-item-mr" [class]="getReceptorClass(stagingData.her2Status)">
+                          <span class="receptor-name-mr">HER2</span>
+                          <span class="receptor-dot-mr" [class]="getReceptorClass(stagingData.her2Status)"></span>
+                          <span class="receptor-val-mr">{{ getReceptorLabel(stagingData.her2Status) }}</span>
+                        </div>
+                        @if (stagingData.ki67 !== null) {
+                        <div class="receptor-item-mr ki67-item">
+                          <span class="receptor-name-mr">Ki-67</span>
+                          <div class="ki67-bar-wrap-mr">
+                            <div class="ki67-bar-mr" [style.width.%]="stagingData.ki67" [class.high-ki67]="(stagingData.ki67 ?? 0) > 20"></div>
+                          </div>
+                          <span class="receptor-val-mr">{{ stagingData.ki67 }}%</span>
+                        </div>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </article>
+                }
+              </div>
+              }
+
+              <!-- SUB-TAB: ALLERGIES -->
+              @if (activeDossierTab === 'allergies') {
+              <div class="section-panel-mr">
+                <div class="cards-grid-mr">
+                  @for (a of selectedRecord.allergies; track a.id) {
+                  <article class="allergy-card-mr" [class]="getSeverityClass(a.severity)">
+                    <div class="acard-stripe-mr" [class]="getSeverityClass(a.severity)"></div>
+                    <div class="acard-top-mr">
+                      <div class="acard-icon-mr" [class]="getSeverityClass(a.severity)">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          @if (a.severity === AllergySeverity.HIGH) {
+                            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                            <line x1="12" y1="9" x2="12" y2="13" />
+                            <line x1="12" y1="17" x2="12.01" y2="17" />
+                          } @else if (a.severity === AllergySeverity.MEDIUM) {
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                          } @else {
+                            <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                            <polyline points="22 4 12 14.01 9 11.01" />
+                          }
+                        </svg>
+                      </div>
+                      <div>
+                        <div class="acard-name-mr">{{ a.substance }}</div>
+                        <span class="severity-badge-mr" [class]="getSeverityClass(a.severity)">{{ getSeverityLabel(a.severity) }}</span>
+                      </div>
+                    </div>
+                    <div class="acard-reaction-mr">
+                      <div class="small-label-mr">Réaction observée</div>
+                      <p class="reaction-text-mr">{{ a.reaction }}</p>
+                    </div>
+                    <div class="severity-bar-wrap-mr">
+                      <div class="severity-bar-mr" [class]="getSeverityClass(a.severity)"></div>
+                    </div>
+                  </article>
+                  }
+                  @if (!selectedRecord.allergies.length) { <div class="empty-state-mr">Aucune allergie répertoriée.</div> }
+                </div>
+              </div>
+              }
+
+              <!-- SUB-TAB: TRAITEMENTS -->
+              @if (activeDossierTab === 'treatments') {
+              <div class="section-panel-mr">
+                <div class="treat-list-mr">
+                  @for (t of selectedRecord.treatments; track t.id) {
+                  <article class="treat-card-mr" [class]="getTreatmentDisplayStatus(t)">
+                    <div class="accent-bar-mr" [class]="getTreatmentDisplayStatus(t)"></div>
+                    <div class="treat-body-mr">
+                      <div class="treat-top-mr">
+                        <div class="treat-icon-mr" [class]="getTreatmentDisplayStatus(t)">
+                          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            @if (getTreatmentDisplayStatus(t) !== 'completed') {
+                              <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                              <polyline points="22 4 12 14.01 9 11.01" />
+                            } @else {
+                              <circle cx="12" cy="12" r="10" />
+                              <line x1="12" y1="8" x2="12" y2="12" />
+                              <line x1="12" y1="16" x2="12.01" y2="16" />
+                            }
+                          </svg>
+                        </div>
+                        <div>
+                          <div class="treat-name-mr">{{ t.medicationName || t.treatmentType }}</div>
+                          <span class="status-badge-mr" [class]="getTreatmentDisplayStatus(t)">{{ getTreatmentDisplayStatusLabel(t) }}</span>
+                        </div>
+                        <span class="dur-chip-mr" style="margin-left:auto; font-size:0.65rem; font-weight:700; color:var(--tm); background:rgba(22,21,69,0.04); padding:0.25rem 0.6rem; border-radius:100px;">{{ getTreatmentDuration(t) }}</span>
+                      </div>
+                      <p class="treat-desc-mr">{{ t.notes || t.protocol || 'Aucun détail supplémentaire.' }}</p>
+                      <div class="treat-dates-mr">
+                        <div class="date-pair-mr"><span>Début</span><strong>{{ formatDate(t.startDate) }}</strong></div>
+                        <span class="d-arrow-mr">→</span>
+                        <div class="date-pair-mr"><span>Fin</span><strong>{{ formatDate(t.endDate) || '—' }}</strong></div>
+                      </div>
+                    </div>
+                  </article>
+                  }
+                  @if (!selectedRecord.treatments.length) { <div class="empty-state-mr">Aucun traitement répertorié.</div> }
+                </div>
+              </div>
+              }
+
+              <!-- SUB-TAB: ANTÉCÉDENTS -->
+              @if (activeDossierTab === 'antecedents') {
+              <div class="section-panel-mr">
+                <div class="antecedents-list-mr">
+                  @for (a of selectedRecord.medicalHistories; track a.id) {
+                  <article class="antecedent-card-mr" [class]="getCategoryClass(a.historyType)">
+                    <div class="ant-left-bar-mr" [class]="getCategoryClass(a.historyType)"></div>
+                    <div class="ant-body-mr">
+                      <div class="ant-top-mr">
+                        <span class="ant-cat-mr" [class]="getCategoryClass(a.historyType)">{{ getCategoryLabel(a.historyType) }}</span>
+                        <span class="ant-date-mr">{{ formatDate(a.eventDate) }}</span>
+                      </div>
+                      <h4 class="ant-title-mr">{{ a.title }}</h4>
+                      <p class="ant-detail-mr">{{ a.description }}</p>
+                    </div>
+                  </article>
+                  }
+                  @if (!selectedRecord.medicalHistories.length) { <div class="empty-state-mr">Aucun antécédent répertorié.</div> }
+                </div>
+              </div>
+              }
+
+              <!-- SUB-TAB: HISTORIQUE -->
+              @if (activeDossierTab === 'history') {
+              <div class="section-panel-mr">
+                <div class="timeline-mr">
+                  @for (ev of selectedTimeline; track $index) {
+                  <article class="tl-item-mr" [class]="getEventTypeClass(ev.eventType)">
+                    <div class="tl-dot-mr" [class]="getEventTypeClass(ev.eventType)">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path [attr.d]="getEventIcon(ev.eventType)" />
+                      </svg>
+                    </div>
+                    <div class="tl-content-mr">
+                      <span class="tl-date-mr">{{ formatDateTime(ev.eventDate) }}</span>
+                      <h4 class="tl-title-mr">{{ ev.title || 'Événement' }}</h4>
+                      <p class="tl-desc-mr">{{ ev.description || 'Détails non spécifiés' }}</p>
+                    </div>
+                  </article>
+                  }
+                  @if (!selectedTimeline.length) { <div class="empty-state-mr">Aucun historique disponible.</div> }
+                </div>
+              </div>
+              }
+            </div>
+          </div>
+          <ng-template #noRecord>
+            <div class="empty-state" style="padding:4rem">
+              <div class="loader-spinner"></div>
+              <p>Chargement du dossier médical complet...</p>
+            </div>
+          </ng-template>
+        </div>
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- TAB: OVERVIEW                              -->
+        <!-- ═══════════════════════════════════════════ -->
+        <div class="tab-content overview-tab" *ngIf="activeTab === 'overview'">
+          <div class="kpi-grid">
+            <div class="kpi-card glass-card blue">
+              <div class="kpi-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20 M2 12h20"/><path d="M16 12A4 4 0 1 1 8 12 4 4 0 1 1 16 12z"/></svg></div>
+              <div class="kpi-body"><span class="val">{{ selectedPatient.bloodType ? getBloodTypeLabel(selectedPatient.bloodType) : 'N/A' }}</span><span class="lab">Groupe Sanguin</span></div>
+            </div>
+            <div class="kpi-card glass-card green">
+              <div class="kpi-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20v-5M9 11l3 3 3-3"/><path d="M12 4v11"/><path d="M20 12h-2"/><path d="M4 12h2"/></svg></div>
+              <div class="kpi-body"><span class="val">{{ selectedPatient.bmi || '—' }}</span><span class="lab">IMC (Indice Masse Corp.)</span></div>
+            </div>
+            <div class="kpi-card glass-card purple">
+              <div class="kpi-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+              <div class="kpi-body"><span class="val">{{ selectedLatestTracker ? selectedLatestTracker.healthScore : '—' }}</span><span class="lab">Dernier Score Tracker</span></div>
+            </div>
+            <div class="kpi-card glass-card orange">
+              <div class="kpi-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+              <div class="kpi-body"><span class="val">{{ selectedPatient.medicalConsent ? 'Oui' : 'Non' }}</span><span class="lab">Consentement Médical</span></div>
+            </div>
+          </div>
+
+          <div class="overview-body">
+            <div class="diagnosis-card glass-card" *ngIf="selectedRecord">
+              <div class="card-head"><h3>Diagnostic Principal</h3></div>
+              <div class="diag-body">
+                <div class="diag-item"><span class="label">Stade</span><span class="value">{{ getStageLabel(selectedRecord.cancerStage) }}</span></div>
+                <div class="diag-item"><span class="label">Type de Tumeur</span><span class="value">{{ getTumorTypeLabel(selectedRecord.tumorType) }}</span></div>
+                <div class="diag-item"><span class="label">Grade</span><span class="value">Grade {{ selectedRecord.tumorGrade || '—' }}</span></div>
+                <div class="diag-item"><span class="label">Taille</span><span class="value">{{ selectedRecord.tumorSizeMm ? selectedRecord.tumorSizeMm + ' mm' : '—' }}</span></div>
+                <div class="diag-notes"><span class="label">Notes diagnostiques</span><p>{{ selectedRecord.diagnosisNotes || 'Aucune note supplémentaire.' }}</p></div>
+              </div>
+            </div>
+            <div class="alerts-summary glass-card" *ngIf="selectedAlerts.length > 0">
+              <div class="card-head"><h3>Alertes Récentes ({{ selectedAlerts.length }})</h3></div>
+              <div class="alert-list-mini">
+                <div class="alert-row-mini" *ngFor="let a of selectedAlerts.slice(0, 3)">
+                  <span class="alert-lvl" [class]="getSeverityClass(a.severity)"></span>
+                  <div class="alert-info"><span>{{ a.message }}</span><small>{{ formatDateTime(a.createdAt) }}</small></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ TAB: CLINICAL ═══ -->
+        <div class="tab-content clinical-tab" *ngIf="activeTab === 'clinical'">
+          <div class="clinical-header-actions" style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
+            <button class="btn-primary-glow small" (click)="openClinicalModal()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right: 6px; vertical-align: -2px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Modifier les données cliniques
+            </button>
+          </div>
+          <!-- ═══ STAGING DASHBOARD (Clinical Tab) ═══ -->
+          @if (hasStagingData) {
+          <article class="staging-dashboard-mr glass-card" style="margin-bottom: 1.5rem; background: var(--glass); border: 1px solid var(--lumi);">
+            <div class="staging-header-mr">
+              <div class="staging-header-left-mr">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                <h3 class="staging-title-mr">Classification TNM & Profil Clinique</h3>
+              </div>
+              <span class="auto-badge-mr" *ngIf="stagingData.autoComputed">Auto-calculé</span>
+            </div>
+            <div class="staging-body-mr">
+              <div class="stage-ring-wrap-mr">
+                <div class="stage-ring-mr" [style.--stage-color]="getStageColor(stagingData.stage)">
+                  <svg viewBox="0 0 80 80" class="ring-svg-mr">
+                    <circle cx="40" cy="40" r="34" class="ring-track-mr"/>
+                    <circle cx="40" cy="40" r="34" class="ring-fill-mr" [style.stroke]="getStageColor(stagingData.stage)" [style.stroke-dasharray]="(getStageProgress(stagingData.stage) / 100 * 213.6) + ' ' + (213.6 - getStageProgress(stagingData.stage) / 100 * 213.6)"/>
+                  </svg>
+                  <div class="ring-center-mr">
+                    <span class="ring-num-mr" [style.color]="getStageColor(stagingData.stage)">{{ getStageNumber(stagingData.stage) }}</span>
+                    <span class="ring-label-mr">{{ stagingData.stageLabel }}</span>
+                  </div>
+                </div>
+                <span class="tnm-full-label-mr">{{ stagingData.computedStageLabel }}</span>
+              </div>
+              <div class="tnm-grid-mr">
+                <div class="tnm-tile-mr t-tile"><span class="tnm-letter-mr">T</span><span class="tnm-val-mr">{{ stagingData.tnmT }}</span><span class="tnm-desc-mr">Tumeur</span></div>
+                <div class="tnm-tile-mr n-tile"><span class="tnm-letter-mr">N</span><span class="tnm-val-mr">{{ stagingData.tnmN }}</span><span class="tnm-desc-mr">Ganglions</span></div>
+                <div class="tnm-tile-mr m-tile"><span class="tnm-letter-mr">M</span><span class="tnm-val-mr">{{ stagingData.tnmM }}</span><span class="tnm-desc-mr">Métastases</span></div>
+              </div>
+              <div class="receptor-panel-mr" style="grid-column: span 1;">
+                <h4 class="receptor-heading-mr">Sommaire Récepteurs</h4>
+                <div class="receptor-grid-mr">
+                  <div class="receptor-item-mr" [class]="getReceptorClass(stagingData.erStatus)">ER: {{ getReceptorLabel(stagingData.erStatus) }}</div>
+                  <div class="receptor-item-mr" [class]="getReceptorClass(stagingData.prStatus)">PR: {{ getReceptorLabel(stagingData.prStatus) }}</div>
+                  <div class="receptor-item-mr" [class]="getReceptorClass(stagingData.her2Status)">HER2: {{ getReceptorLabel(stagingData.her2Status) }}</div>
+                </div>
+              </div>
+            </div>
+          </article>
+          }
+
+          <div class="clinical-grid" *ngIf="selectedRecord && selectedRecord.clinicalData">
+            <div class="clinical-card glass-card">
+              <h4 class="clinical-title">Récepteurs Hormonaux</h4>
+              <div class="receptor-row" *ngFor="let r of [['ER', selectedRecord.clinicalData.erStatus], ['PR', selectedRecord.clinicalData.prStatus], ['HER2', selectedRecord.clinicalData.her2Status]]">
+                <span class="r-label">{{ r[0] }}</span>
+                <span class="r-status-pill" [class]="r[1]?.toLowerCase()">{{ r[1] }}</span>
+              </div>
+              <div class="ki67-box" *ngIf="selectedRecord.clinicalData.ki67Index">
+                <span class="ki-label">Index Ki-67</span>
+                <div class="ki-track"><div class="ki-fill" [style.width.%]="selectedRecord.clinicalData.ki67Index"></div></div>
+                <span class="ki-val">{{ selectedRecord.clinicalData.ki67Index }}%</span>
+              </div>
+            </div>
+            <div class="clinical-card glass-card">
+              <h4 class="clinical-title">Procédures & Thérapies</h4>
+              <div class="clinical-details">
+                <p><strong>Dernière mammographie:</strong> {{ getLastMammographyDateFromHistory() }}</p>
+                <p><strong>Type de chirurgie:</strong> {{ getSurgeryFromHistory() }}</p>
+                <div class="checks-row">
+                  <span [class.active]="hasTherapyInHistory('radiothérapie')">Radiothérapie</span>
+                  <span [class.active]="hasTherapyInHistory('chimiothérapie')">Chimiothérapie</span>
+                  <span [class.active]="hasTherapyInHistory('hormonothérapie')">Hormonothérapie</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="empty-state" *ngIf="!selectedRecord || !selectedRecord.clinicalData">Aucune donnée clinique détaillée.</div>
+        </div>
+
+        <!-- ═══ TAB: TIMELINE ═══ -->
+        <div class="tab-content timeline-tab" *ngIf="activeTab === 'timeline'">
+          <div class="timeline-v">
+            <div class="timeline-v-item" *ngFor="let e of selectedTimeline">
+              <div class="v-date">{{ formatDateTime(e.eventDate) }}</div>
+              <div class="v-dot" [class]="getEventTypeClass(e.eventType)"></div>
+              <div class="v-card glass-card">
+                <span class="v-title">{{ e.title }}</span>
+                <p class="v-desc">{{ e.description }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="empty-state" *ngIf="selectedTimeline.length === 0">Aucun événement enregistré.</div>
+        </div>
+
+        <!-- ═══ TAB: ALERTS ═══ -->
+        <div class="tab-content alerts-tab" *ngIf="activeTab === 'alerts'">
+          <div class="alerts-grid">
+            <div class="alert-card glass-card" *ngFor="let a of selectedAlerts" [class]="getSeverityClass(a.severity)">
+              <div class="alert-head">
+                <span class="alert-type">{{ a.type }}</span>
+                <span class="alert-sev-badge" [class]="getSeverityClass(a.severity)">{{ a.severity }}</span>
+              </div>
+              <p class="alert-msg">{{ a.message }}</p>
+              <div class="alert-footer">
+                <span class="alert-date">{{ formatDateTime(a.createdAt) }}</span>
+                <button class="btn-resolve" *ngIf="!a.resolved">Résoudre</button>
+              </div>
+            </div>
+          </div>
+          <div class="empty-state" *ngIf="selectedAlerts.length === 0">Aucune alerte active.</div>
+        </div>
+
+        <!-- ═══ TAB: HISTORY ═══ -->
+        <div class="tab-content history-tab" *ngIf="activeTab === 'history'">
+          <div class="history-list">
+            <div class="history-section" *ngFor="let group of ['PERSONAL', 'FAMILY', 'SURGICAL']">
+              <h4 class="h-type-title">{{ getHistoryTypeLabel(group) }}</h4>
+              <div class="h-entries">
+                <div class="h-entry glass-card" *ngFor="let entry of getHistoryByType(group)">
+                  <span class="h-e-title">{{ entry.description }}</span>
+                  <div class="h-e-meta">
+                    <span *ngIf="entry.occurrenceDate">Date: {{ formatDate(entry.occurrenceDate) }}</span>
+                    <span *ngIf="entry.relation">{{ entry.relation }}</span>
+                  </div>
+                  <p *ngIf="entry.notes" class="h-e-notes">{{ entry.notes }}</p>
+                </div>
+                <div class="no-history" *ngIf="getHistoryByType(group).length === 0">Aucun antécédent répertorié.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ═══ PREMIUM HERO — No Patient Selected ═══ -->
+      <div class="detail-area" *ngIf="!selectedPatient && !loading">
+        <div class="pat-hero">
+          <div class="pat-hero-grid-bg"></div>
+          <div class="pat-hero-glow pat-hero-glow--1"></div>
+          <div class="pat-hero-glow pat-hero-glow--2"></div>
+
+          <div class="pat-hero-content">
+            <span class="pat-hero-eyebrow">🩺 Suivi Oncologique</span>
+            <h2 class="pat-hero-title">Dossiers<br/><span class="pat-hero-grad">Patients Complets</span></h2>
+            <p class="pat-hero-desc">
+              Accédez aux dossiers médicaux, données cliniques, stadification TNM,
+              historique d'événements et alertes de chaque patient en un clic.
+            </p>
+          </div>
+
+          <div class="pat-hero-features">
+            <div class="phf-card phf-dossier">
+              <div class="phf-icon">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </div>
+              <h4>Dossier Médical</h4>
+              <p>IMC · Allergies · Traitements · Antécédents · TNM</p>
+            </div>
+            <div class="phf-card phf-clinical">
+              <div class="phf-icon">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              </div>
+              <h4>Données Cliniques</h4>
+              <p>Récepteurs ER/PR/HER2 · Ki-67 · Grade · Taille tumorale</p>
+            </div>
+            <div class="phf-card phf-timeline">
+              <div class="phf-icon">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              </div>
+              <h4>Timeline & Alertes</h4>
+              <p>Événements médicaux en temps réel · Score de santé · Suivi</p>
+            </div>
+          </div>
+
+          <p class="pat-hero-hint">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            Sélectionnez un patient ci-dessus pour consulter son dossier
+          </p>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       CLINICAL DATA EDITOR MODAL
+       ═══════════════════════════════════════════════════════════ -->
+  <div class="clinical-modal-overlay" *ngIf="showClinicalModal" (click)="closeClinicalModal()">
+    <div class="clinical-modal-content glass-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">Mise à jour des Données Cliniques</h3>
+        <button class="btn-close" (click)="closeClinicalModal()">×</button>
+      </div>
+
+      <div class="modal-body" *ngIf="clinicalForm">
+        <div class="form-grid">
+          <!-- TNM SECTION -->
+          <div class="form-section">
+            <h4 class="section-title">Paramètres TNM (Classification)</h4>
+            <div class="input-group">
+              <label>Taille de la tumeur (mm)</label>
+              <input type="number" [(ngModel)]="clinicalForm.tumorSize" placeholder="Ex: 25">
+            </div>
+            <div class="input-group">
+              <label>Ganglions envahis (nombre)</label>
+              <input type="number" [(ngModel)]="clinicalForm.lymphNodesInvolved" placeholder="Ex: 2">
+            </div>
+            <div class="input-group checkbox">
+              <label class="toggle-switch">
+                <input type="checkbox" [(ngModel)]="clinicalForm.metastasis">
+                <span class="slider"></span>
+              </label>
+              <span>Métastases à distance (M1)</span>
+            </div>
+            <div class="input-group">
+              <label>Grade Tumorale (SBR / Nottingham)</label>
+              <select [(ngModel)]="clinicalForm.grade">
+                <option [value]="0">Non spécifié</option>
+                <option [value]="1">Grade 1 (Bien différencié)</option>
+                <option [value]="2">Grade 2 (Modérément différencié)</option>
+                <option [value]="3">Grade 3 (Peu différencié)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- BIOLOGY SECTION -->
+          <div class="form-section">
+            <h4 class="section-title">Profil Biologique & Récepteurs</h4>
+            <div class="input-group">
+              <label>Récepteur Estrogène (ER)</label>
+              <select [(ngModel)]="clinicalForm.estrogenReceptor">
+                <option value="POSITIVE">Positif (+)</option>
+                <option value="NEGATIVE">Négatif (-)</option>
+                <option value="UNKNOWN">Inconnu / Non évalué</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label>Récepteur Progestérone (PR)</label>
+              <select [(ngModel)]="clinicalForm.progesteroneReceptor">
+                <option value="POSITIVE">Positif (+)</option>
+                <option value="NEGATIVE">Négatif (-)</option>
+                <option value="UNKNOWN">Inconnu / Non évalué</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label>Statut HER2</label>
+              <select [(ngModel)]="clinicalForm.her2Status">
+                <option value="POSITIVE">HER2 Positif (3+ ou ISH+)</option>
+                <option value="NEGATIVE">HER2 Négatif (0 ou 1+)</option>
+                <option value="UNKNOWN">Inconnu / Non évalué</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label>Index Ki-67 (%)</label>
+              <input type="number" [(ngModel)]="clinicalForm.ki67" placeholder="Ex: 15">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeClinicalModal()">Annuler</button>
+        <button class="btn-primary-glow" (click)="saveClinicalData()" [disabled]="savingClinical">
+          <span *ngIf="!savingClinical">Enregistrer les modifications</span>
+          <span *ngIf="savingClinical" class="btn-loader"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+

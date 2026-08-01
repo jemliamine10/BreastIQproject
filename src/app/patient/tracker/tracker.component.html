@@ -1,0 +1,239 @@
+<div class="dash-orb dash-orb--1"></div>
+<div class="dash-orb dash-orb--2"></div>
+
+<div class="tracker-page">
+    <!-- ─────────────────────────────────────────────────────────────────
+       PAGE HEADER
+       ───────────────────────────────────────────────────────────────── -->
+    <header class="page-header">
+        <div>
+            <h1 class="page-title">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                Suivi Clinique
+            </h1>
+            <p class="page-subtitle">Monitoring quotidien de votre état de santé</p>
+        </div>
+        <button class="btn-wow" (click)="openForm()" *ngIf="!showForm">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12h14"/></svg>
+            Enregistrer mes signes
+        </button>
+    </header>
+
+    <!-- ─────────────────────────────────────────────────────────────────
+       VITALS HUB (Latest Overview)
+       ───────────────────────────────────────────────────────────────── -->
+    <section class="vitals-hub" *ngIf="latestEntry && !loading">
+        <!-- Main Score Circle -->
+        <article class="health-score-card">
+            <div class="score-ring-wrap">
+                <svg class="score-svg" viewBox="0 0 100 100">
+                    <defs>
+                        <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#a95e92" />
+                            <stop offset="100%" stop-color="#161545" />
+                        </linearGradient>
+                    </defs>
+                    <circle class="score-circle-bg" cx="50" cy="50" r="45" />
+                    <circle class="score-circle-val" cx="50" cy="50" r="45" 
+                            [style.stroke-dasharray]="(latestEntry.healthScore * 2.83) + ', 283'" />
+                </svg>
+                <div class="score-content">
+                    <span class="score-num">{{ latestEntry.healthScore }}</span>
+                    <span class="score-unit">Points</span>
+                </div>
+            </div>
+            <h3 class="health-label" [class]="getScoreClass(latestEntry.healthScore)">
+                {{ getScoreLabel(latestEntry.healthScore) }}
+            </h3>
+            <p class="card-subtitle">Calculé sur {{ history.length }} relevés</p>
+        </article>
+
+        <!-- Vitals Detail Grid -->
+        <div class="vitals-grid">
+            <div class="vital-card">
+                <div class="vital-head">
+                    <span class="vital-title">Douleur</span>
+                    <span class="vital-val">{{ latestEntry.painLevel ?? 0 }}/10</span>
+                </div>
+                <div class="vital-bar-track">
+                    <div class="vital-bar pain" [style.width]="getBarWidth(latestEntry.painLevel)"></div>
+                </div>
+            </div>
+            <div class="vital-card">
+                <div class="vital-head">
+                    <span class="vital-title">Fatigue</span>
+                    <span class="vital-val">{{ latestEntry.fatigueLevel ?? 0 }}/10</span>
+                </div>
+                <div class="vital-bar-track">
+                    <div class="vital-bar fatigue" [style.width]="getBarWidth(latestEntry.fatigueLevel)"></div>
+                </div>
+            </div>
+            <div class="vital-card">
+                <div class="vital-head">
+                    <span class="vital-title">Moral</span>
+                    <span class="vital-val">{{ latestEntry.moodLevel ?? 0 }}/10</span>
+                </div>
+                <div class="vital-bar-track">
+                    <div class="vital-bar mood" [style.width]="getBarWidth(latestEntry.moodLevel)"></div>
+                </div>
+            </div>
+            <div class="vital-card">
+                <div class="vital-head">
+                    <span class="vital-title">Température</span>
+                    <span class="vital-val">{{ latestEntry.temperature ? latestEntry.temperature + '°' : '--' }}</span>
+                </div>
+                <p class="page-subtitle" style="margin:0">{{ latestEntry.weight ? 'Poids: ' + latestEntry.weight + ' kg' : 'Poids: --' }}</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ─────────────────────────────────────────────────────────────────
+       THE CLINICAL TIMELINE
+       ───────────────────────────────────────────────────────────────── -->
+    <section class="timeline-container" *ngIf="history.length > 0 && !loading">
+        <h2 class="section-title">Historique Clinique</h2>
+        
+        <div class="history-timeline">
+            <div class="timeline-line"></div>
+            
+            <div class="timeline-entry" *ngFor="let entry of history; let i = index" [style.animation-delay]="(i * 0.1) + 's'">
+                <div class="timeline-node"></div>
+                
+                <div class="entry-header">
+                    <span class="entry-date">{{ formatDateShort(entry.recordedAt) }}</span>
+                    <span class="entry-ago">{{ timeAgo(entry.recordedAt) }}</span>
+                </div>
+
+                <div class="entry-meta-grid">
+                    <div class="meta-item">
+                        <span class="meta-label">Score Santé</span>
+                        <span class="meta-val" [class]="getScoreClass(entry.healthScore)">{{ entry.healthScore }}%</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Risque</span>
+                        <span class="risk-cell" [class]="getRiskClass(entry.riskLevel)">{{ getRiskLabel(entry.riskLevel) }}</span>
+                    </div>
+                    <div class="meta-item" *ngIf="hasGiSymptoms(entry)">
+                        <span class="meta-label">Symptômes GI</span>
+                        <div class="symptom-badges">
+                            <span class="s-badge vomiting" *ngIf="entry.vomiting">Vomi.</span>
+                            <span class="s-badge diarrhea" *ngIf="entry.diarrhea">Diar.</span>
+                            <span class="s-badge appetite" *ngIf="entry.appetiteLoss">Appétit</span>
+                        </div>
+                    </div>
+                    <div class="meta-item" *ngIf="entry.notes">
+                        <span class="meta-label">Notes Patient</span>
+                        <span class="meta-val" style="font-weight: 500; font-style: italic; opacity: 0.8;">"{{ entry.notes | slice:0:30 }}..."</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ─────────────────────────────────────────────────────────────────
+       PREMIUM SUBMISSION MODAL
+       ───────────────────────────────────────────────────────────────── -->
+    <div class="modal-backdrop" *ngIf="showForm">
+        <div class="premium-modal" (click)="$event.stopPropagation()">
+            <div class="modal-accent"></div>
+            <div class="modal-header">
+                <h3 class="modal-title">Nouvel Enregistrement</h3>
+                <button class="btn-close" (click)="closeForm()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--tm);">✕</button>
+            </div>
+
+            <div class="form-body custom-scrollbar">
+                <!-- Sliders Section -->
+                <div class="premium-slider-group">
+                    <div class="slider-item">
+                        <div class="slider-info">
+                            <span class="slider-name">Niveau de Douleur</span>
+                            <span class="slider-badge" [class]="scoreClass(form.painLevel)">{{ form.painLevel }}/10</span>
+                        </div>
+                        <input type="range" min="0" max="10" [(ngModel)]="form.painLevel" name="painLevel" class="slider-custom">
+                    </div>
+
+                    <div class="slider-item">
+                        <div class="slider-info">
+                            <span class="slider-name">Niveau de Fatigue</span>
+                            <span class="slider-badge" [class]="scoreClass(form.fatigueLevel)">{{ form.fatigueLevel }}/10</span>
+                        </div>
+                        <input type="range" min="0" max="10" [(ngModel)]="form.fatigueLevel" name="fatigueLevel" class="slider-custom">
+                    </div>
+
+                    <div class="slider-item">
+                        <div class="slider-info">
+                            <span class="slider-name">État du Moral</span>
+                            <span class="slider-badge" [class]="scoreClass(form.moodLevel, true)">{{ form.moodLevel }}/10</span>
+                        </div>
+                        <input type="range" min="0" max="10" [(ngModel)]="form.moodLevel" name="moodLevel" class="slider-custom">
+                    </div>
+                </div>
+
+                <!-- Symptoms Toggles -->
+                <div class="symptom-section">
+                    <h4 class="vital-title" style="margin-bottom: 1rem;">Symptômes observés</h4>
+                    <div class="symptom-toggles">
+                        <div class="symptom-btn" [class.active]="form.vomiting" (click)="form.vomiting = !form.vomiting">
+                            <span class="s-emoji">🤮</span>
+                            <span class="s-label">Vomissements</span>
+                        </div>
+                        <div class="symptom-btn" [class.active]="form.diarrhea" (click)="form.diarrhea = !form.diarrhea">
+                            <span class="s-emoji">💧</span>
+                            <span class="s-label">Diarrhée</span>
+                        </div>
+                        <div class="symptom-btn" [class.active]="form.appetiteLoss" (click)="form.appetiteLoss = !form.appetiteLoss">
+                            <span class="s-emoji">🍽️</span>
+                            <span class="s-label">Perte appétit</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vitals Inputs -->
+                <div class="measurements-row">
+                    <div class="input-group">
+                        <label class="vital-title">Température (°C)</label>
+                        <input type="number" step="0.1" [(ngModel)]="form.temperature" name="temperature" placeholder="36.5" class="premium-input-style" style="background: white; border: 1px solid rgba(0,0,0,0.05); padding: 0.8rem; border-radius: 12px;">
+                    </div>
+                    <div class="input-group">
+                        <label class="vital-title">Poids (kg)</label>
+                        <input type="number" step="0.1" [(ngModel)]="form.weight" name="weight" placeholder="62.0" class="premium-input-style" style="background: white; border: 1px solid rgba(0,0,0,0.05); padding: 0.8rem; border-radius: 12px;">
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="input-group">
+                    <label class="vital-title">Observations libres</label>
+                    <textarea [(ngModel)]="form.notes" name="notes" rows="3" placeholder="Notes additionnelles pour votre médecin..." style="background: white; border: 1px solid rgba(0,0,0,0.05); padding: 1rem; border-radius: 12px; font-family: inherit;"></textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-wow" style="background: rgba(22, 21, 69, 0.05); color: var(--tp); box-shadow: none;" (click)="closeForm()" *ngIf="!submitting">Plus tard</button>
+                <button class="btn-wow" (click)="submitTracker()" [disabled]="submitting">
+                    {{ submitting ? 'Synchronisation...' : 'Enregistrer le suivi' }}
+                </button>
+            </div>
+            
+            <div class="success-banner" *ngIf="submitSuccess" style="position:absolute; inset:0; z-index:100; justify-content:center; background: white;">
+                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="var(--mint)" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+                <span style="font-size: 1.5rem; margin-top: 1rem;">C'est noté !</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────────────────────────────
+       LOADING STATE
+       ───────────────────────────────────────────────────────────────── -->
+    <div class="loading-state" *ngIf="loading">
+        <div class="loading-pulse"></div>
+        <span>Analyse des données cliniques...</span>
+    </div>
+
+    <!-- Empty History -->
+    <div class="loading-state" *ngIf="history.length === 0 && !loading">
+        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="var(--tm)" stroke-width="1.2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+        </svg>
+        <span>Aucun historique disponible</span>
+    </div>
+</div>

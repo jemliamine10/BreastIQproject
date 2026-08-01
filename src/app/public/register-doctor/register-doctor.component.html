@@ -1,0 +1,375 @@
+<div class="register-page">
+  <!-- Animated Background -->
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+  <div class="grid-pattern"></div>
+
+  <div class="register-container">
+    <!-- Left Panel - Branding -->
+    <div class="reg-branding">
+      <div class="brand-content">
+        <a routerLink="/" class="brand-logo">
+          <img src="assets/logoBreastCancersite.png" alt="BreastIQ" class="brand-img" />
+        </a>
+
+        <div class="brand-hero">
+          <div class="badge-pill">Espace Médecin</div>
+          <h1>Rejoignez la communauté de <span class="gradient-text">spécialistes BreastIQ</span></h1>
+          <p>Accédez à des outils IA d'aide au diagnostic, gérez vos patients(es) et collaborez efficacement.</p>
+        </div>
+
+        <div class="brand-stats">
+          <div class="stat-item">
+            <div class="stat-number">2,400+</div>
+            <div class="stat-label">Médecins inscrits</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">98%</div>
+            <div class="stat-label">Satisfaction</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">50k+</div>
+            <div class="stat-label">Analyses IA</div>
+          </div>
+        </div>
+
+        <div class="brand-testimonial">
+          <div class="testimonial-quote">"BreastIQ a transformé ma pratique. L'IA me permet de prioriser les cas urgents avec une précision remarquable."</div>
+          <div class="testimonial-author">
+            <div class="author-avatar">S</div>
+            <div>
+              <strong>Dr. Sophie Martin</strong>
+              <span>Radiologue - Paris</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel - Form -->
+    <div class="reg-form-panel" [@fadeInUp]>
+      <div class="form-scroll-area">
+        <div class="form-wrapper">
+          <!-- Header -->
+          <div class="form-top-bar">
+            <a routerLink="/" class="back-link">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+              Accueil
+            </a>
+            <span class="step-indicator">Étape {{ currentStep }}/{{ totalSteps }}</span>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="progress-container">
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width.%]="stepProgress"></div>
+            </div>
+            <div class="steps-nav">
+              <div
+
+                class="step-dot"
+                *ngFor="let step of steps"
+                [class.active]="currentStep === step.number"
+                [class.completed]="currentStep > step.number"
+                (click)="goToStep(step.number)"
+              >
+                <div class="dot-circle">
+                  <span *ngIf="currentStep <= step.number" [ngSwitch]="step.icon">
+                    <svg *ngSwitchCase="'user'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-premium"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <svg *ngSwitchCase="'stethoscope'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-premium"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                    <svg *ngSwitchCase="'clipboard'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-premium"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                  </span>
+                  <svg *ngIf="currentStep > step.number" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <span class="dot-label">{{ step.label }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Error -->
+          <div class="alert alert-error" *ngIf="errorMessage" [@fadeIn]>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            {{ errorMessage }}
+          </div>
+
+          <!-- ==================== STEP 1: Identity ==================== -->
+          <div class="step-content" *ngIf="currentStep === 1" [@slideStep]>
+            <div class="step-header">
+              <h2>Informations personnelles</h2>
+              <p>Créez votre compte médecin en quelques minutes</p>
+            </div>
+
+            <form [formGroup]="userForm" class="reg-form">
+              <div class="form-row">
+                <div class="form-group" [class.error]="uf['firstName'].touched && uf['firstName'].invalid">
+                  <label>Prénom *</label>
+                  <input type="text" formControlName="firstName" placeholder="Jean" />
+                  <div class="field-error" *ngIf="uf['firstName'].touched && uf['firstName'].errors?.['required']">Prénom requis</div>
+                </div>
+                <div class="form-group" [class.error]="uf['lastName'].touched && uf['lastName'].invalid">
+                  <label>Nom *</label>
+                  <input type="text" formControlName="lastName" placeholder="Dupont" />
+                  <div class="field-error" *ngIf="uf['lastName'].touched && uf['lastName'].errors?.['required']">Nom requis</div>
+                </div>
+              </div>
+
+              <div class="form-group" [class.error]="uf['email'].touched && uf['email'].invalid" [class.success]="emailAvailable === true">
+                <label>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                  Email professionnel *
+                </label>
+                <input type="email" formControlName="email" placeholder="dr.dupont@clinique.fr" (blur)="onEmailBlur()" />
+                <div class="field-error" *ngIf="uf['email'].touched && uf['email'].errors?.['required']">Email requis</div>
+                <div class="field-error" *ngIf="uf['email'].touched && uf['email'].errors?.['email']">Email invalide</div>
+                <div class="field-info checking" *ngIf="emailChecking">Vérification en cours...</div>
+                <div class="field-error" *ngIf="emailAvailable === false && !emailChecking">Cet email est déjà utilisé</div>
+                <div class="field-success" *ngIf="emailAvailable === true && !emailChecking">✓ Email disponible</div>
+              </div>
+
+              <div class="form-group" [class.error]="uf['password'].touched && uf['password'].invalid">
+                <label>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  Mot de passe *
+                </label>
+                <div class="input-wrapper">
+                  <input [type]="showPassword ? 'text' : 'password'" formControlName="password" placeholder="Minimum 6 caractères" />
+                  <button type="button" class="toggle-pw" (click)="togglePassword()">
+                    <svg *ngIf="!showPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <svg *ngIf="showPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                  </button>
+                </div>
+                <div class="field-error" *ngIf="uf['password'].touched && uf['password'].errors?.['required']">Mot de passe requis</div>
+                <div class="field-error" *ngIf="uf['password'].touched && uf['password'].errors?.['minlength']">Minimum 6 caractères</div>
+                
+                <!-- Password Strength -->
+                <div class="password-strength" *ngIf="uf['password'].value">
+                  <div class="strength-meter">
+                    <div class="strength-bar" [class.weak]="passwordStrength >= 1" [class.medium]="passwordStrength >= 2" [class.good]="passwordStrength >= 3" [class.strong]="passwordStrength >= 4"></div>
+                  </div>
+                  <div class="strength-text" [ngSwitch]="passwordStrength">
+                    <span *ngSwitchCase="0">Très faible</span>
+                    <span *ngSwitchCase="1">Faible</span>
+                    <span *ngSwitchCase="2">Moyen</span>
+                    <span *ngSwitchCase="3">Bon</span>
+                    <span *ngSwitchCase="4">Excellent</span>
+                  </div>
+                </div>
+
+                <div class="password-checklist" *ngIf="showPassword || uf['password'].value">
+                  <div class="check-item" [class.met]="passwordCriteria.length">
+                    <span class="check-icon">✓</span> 8+ caractères
+                  </div>
+                  <div class="check-item" [class.met]="passwordCriteria.upper">
+                    <span class="check-icon">✓</span> Majuscule
+                  </div>
+                  <div class="check-item" [class.met]="passwordCriteria.lower">
+                    <span class="check-icon">✓</span> Minuscule
+                  </div>
+                  <div class="check-item" [class.met]="passwordCriteria.digit">
+                    <span class="check-icon">✓</span> Chiffre
+                  </div>
+                   <div class="check-item" [class.met]="passwordCriteria.special">
+                    <span class="check-icon">✓</span> Caractère spécial
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Téléphone</label>
+                  <input type="tel" formControlName="phone" placeholder="+33 6 12 34 56 78" />
+                </div>
+                <div class="form-group">
+                  <label>Date de naissance</label>
+                  <input type="date" formControlName="dateOfBirth" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Genre</label>
+                <div class="chip-group">
+                  <label class="chip" *ngFor="let g of genders" [class.selected]="uf['gender'].value === g">
+                    <input type="radio" formControlName="gender" [value]="g" />
+                    {{ genderLabels[g] }}
+                  </label>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <!-- ==================== STEP 2: Speciality ==================== -->
+          <div class="step-content" *ngIf="currentStep === 2" [@slideStep]>
+            <div class="step-header">
+              <h2>Votre spécialité</h2>
+              <p>Définissez votre profil médical pour une expérience personnalisée</p>
+            </div>
+
+            <form [formGroup]="doctorForm" class="reg-form">
+              <div class="form-group">
+                <label>Type de médecin *</label>
+                <div class="card-select-grid">
+                  <div
+                    class="select-card"
+                    *ngFor="let type of doctorTypes"
+                    [class.selected]="df['doctorType'].value === type"
+                    (click)="selectDoctorType(type)"
+                  >
+                    <span class="card-emoji" [ngSwitch]="doctorTypeIcons[type]">
+                      <svg *ngSwitchCase="'microscope'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-premium"><path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h2"/><path d="M9 12a2 2 0 1 1-2-2V6h6v4a2 2 0 1 1-2 2Z"/><path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3"/></svg>
+                      <svg *ngSwitchCase="'hospital'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-premium"><path d="M18 22V8a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14"/><path d="M2 22h20"/><path d="M14 22v-4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v4"/><path d="M10 10h4"/><path d="M12 8v4"/></svg>
+                      <svg *ngSwitchCase="'scan'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-premium"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 12h10"/><path d="M12 7v10"/></svg>
+                      <svg *ngSwitchCase="'stethoscope'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-premium"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                      <svg *ngSwitchCase="'dna'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-premium"><path d="m8 8 8 8"/><path d="m8 16 8-8"/><path d="M12 2v4"/><path d="M12 18v4"/><path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/><path d="M4.93 19.07l2.83-2.83"/><path d="M16.24 7.76l2.83-2.83"/></svg>
+                      <svg *ngSwitchCase="'user-check'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-premium"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>
+                    </span>
+                    <span class="card-label">{{ doctorTypeLabels[type] }}</span>
+                  </div>
+                </div>
+                <div class="field-error" *ngIf="df['doctorType'].touched && df['doctorType'].errors?.['required']">Sélectionnez un type</div>
+              </div>
+
+              <div class="form-group" [class.error]="df['speciality'].touched && df['speciality'].invalid">
+                <label>Spécialité détaillée *</label>
+                <input type="text" formControlName="speciality" placeholder="Ex: Oncologie mammaire, Radiologie diagnostique..." />
+                <div class="field-error" *ngIf="df['speciality'].touched && df['speciality'].errors?.['required']">Spécialité requise</div>
+              </div>
+
+              <div class="form-group" [class.error]="df['licenseNumber'].touched && df['licenseNumber'].invalid">
+                <label>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  Numéro de licence / RPPS *
+                </label>
+                <input type="text" formControlName="licenseNumber" placeholder="Votre numéro de licence médicale" />
+                <div class="field-error" *ngIf="df['licenseNumber'].touched && df['licenseNumber'].errors?.['required']">Numéro de licence requis</div>
+              </div>
+
+              <div class="form-group">
+                <label>Mode de consultation *</label>
+                <div class="card-select-row">
+                  <div
+                    class="select-card wide"
+                    *ngFor="let mode of consultationModes"
+                    [class.selected]="df['consultationMode'].value === mode"
+                    (click)="selectConsultationMode(mode)"
+                  >
+                    <span class="card-emoji" [ngSwitch]="consultationModeIcons[mode]">
+                      <svg *ngSwitchCase="'building'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-premium"><path d="M3 21h18"/><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/><path d="M9 7h1"/><path d="M9 11h1"/><path d="M9 15h1"/><path d="M14 7h1"/><path d="M14 11h1"/><path d="M14 15h1"/></svg>
+                      <svg *ngSwitchCase="'laptop'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-premium"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+                      <svg *ngSwitchCase="'sync'" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-premium"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 0 0 4.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 0 1-15.357-2m15.357 2H15"/></svg>
+                    </span>
+                    <span class="card-label">{{ consultationModeLabels[mode] }}</span>
+                  </div>
+                </div>
+                <div class="field-error" *ngIf="df['consultationMode'].touched && df['consultationMode'].errors?.['required']">Sélectionnez un mode</div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Années d'expérience</label>
+                  <input type="number" formControlName="yearsOfExperience" placeholder="10" min="0" />
+                </div>
+                <div class="form-group">
+                  <label>Tarif consultation (€)</label>
+                  <input type="number" formControlName="consultationFee" placeholder="50" min="0" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Langues parlées</label>
+                <input type="text" formControlName="languages" placeholder="Français, Anglais, Arabe..." />
+              </div>
+            </form>
+          </div>
+
+          <!-- ==================== STEP 3: Details ==================== -->
+          <div class="step-content" *ngIf="currentStep === 3" [@slideStep]>
+            <div class="step-header">
+              <h2>Informations complémentaires</h2>
+              <p>Complétez votre profil pour attirer plus de patients(es)</p>
+            </div>
+
+            <form [formGroup]="detailsForm" (ngSubmit)="onSubmit()" class="reg-form">
+              <div class="form-group">
+                <label>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                  Nom de la clinique / cabinet
+                </label>
+                <input type="text" formControlName="clinicName" placeholder="Clinique de la Santé" />
+              </div>
+
+              <div class="form-group">
+                <label>Biographie professionnelle</label>
+                <textarea formControlName="bio" rows="4" placeholder="Décrivez votre parcours, vos compétences et votre approche médicale..."></textarea>
+                <div class="char-counter" [class.warning]="getBioLength() > 1400">
+                  {{ getBioLength() }} / 1500
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  Adresse du cabinet
+                </label>
+                <input type="text" formControlName="addressText" placeholder="123 Rue de la Santé" />
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Ville</label>
+                  <input type="text" formControlName="city" placeholder="Paris" />
+                </div>
+                <div class="form-group">
+                  <label>Pays</label>
+                  <input type="text" formControlName="country" placeholder="France" />
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <!-- Navigation Buttons -->
+          <div class="form-actions">
+            <button type="button" class="btn-back" *ngIf="currentStep > 1" (click)="prevStep()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+              Précédent
+            </button>
+            <div class="spacer" *ngIf="currentStep === 1"></div>
+
+            <button
+              *ngIf="currentStep < totalSteps"
+              type="button"
+              class="btn-next"
+              (click)="nextStep()"
+            >
+              Suivant
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+
+            <button
+              *ngIf="currentStep === totalSteps"
+              type="button"
+              class="btn-submit"
+              [class.loading]="isLoading"
+              [disabled]="isLoading"
+              (click)="onSubmit()"
+            >
+              <span *ngIf="!isLoading">
+                Créer mon compte
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <span class="btn-loader" *ngIf="isLoading">
+                <span class="spinner"></span>
+                Inscription...
+              </span>
+            </button>
+          </div>
+
+          <!-- Login link -->
+          <div class="form-footer">
+            Déjà inscrit ? <a routerLink="/public/login">Se connecter</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

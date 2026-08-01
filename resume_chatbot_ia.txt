@@ -1,0 +1,76 @@
+================================================================================
+RÉSUMÉ DE LA FONCTIONNALITÉ CHATBOT IA (CÔTÉ PATIENT)
+================================================================================
+
+Ce document résume le fonctionnement technique et fonctionnel de l'assistant IA 
+intégré dans le module patient.
+
+1. ARCHITECTURE TECHNIQUE
+-------------------------
+- Frontend : Composant Angular `ai-chat-widget.component`.
+- Backend : Service Spring Boot `AiChatService.java`.
+- Moteur IA : Utilise Ollama (modèle local `qwen2.5`) pour garantir la 
+  confidentialité des données de santé.
+
+2. COMMENT ÇA FONCTIONNE ?
+--------------------------
+Le chatbot n'est pas une IA "aveugle". À chaque message envoyé par le patient, 
+le backend enrichit la requête avec un contexte temps réel :
+
+A. Injection de Contexte Patient :
+   Si l'utilisateur est connecté, le système récupère automatiquement dans la 
+   base de données :
+   - Son prochain rendez-vous (date, heure, médecin, lieu).
+   - Ses traitements actifs (type, protocole, progression des cycles).
+   - Ses alertes de santé non résolues.
+   - La liste de ses médecins connectés.
+
+B. Recherche Intelligente de Médecins :
+   Le système analyse le message pour détecter un besoin (ex: "j'ai besoin d'un 
+   radiologue"). Il cherche alors les VRAIS médecins inscrits sur la plateforme, 
+   vérifie leur disponibilité réelle aujourd'hui, et les propose à l'IA.
+
+C. Système de Prompting :
+   L'IA suit des règles strictes : empathie, ne jamais diagnostiquer, 
+   encourager la consultation médicale, et répondre exclusivement en français.
+
+3. QUE PEUT-IL RÉPONDRE ? (CAPACITÉS)
+-------------------------------------
+L'assistant est capable de répondre à 5 types de demandes :
+
+1. Questions sur le Suivi Personnel :
+   - "Quel est mon prochain rendez-vous ?"
+   - "Quels sont mes traitements en cours ?"
+   - "Où en suis-je dans ma chimiothérapie ?"
+   - "Est-ce que j'ai des alertes de santé ?"
+
+2. Recherche et Recommandation de Médecins :
+   - "Je cherche un radiologue disponible aujourd'hui."
+   - "Qui est mon oncologue ?"
+   - "Suggère-moi un gynécologue."
+   - (Le chatbot affiche des cartes cliquables pour ces médecins).
+
+3. Éducation et Information Médicale :
+   - Explications de termes médicaux.
+   - Informations sur les symptômes (sans diagnostic).
+   - Soutien émotionnel et conseils de bien-être.
+
+4. Navigation et Actions Rapides :
+   - Le chatbot propose des boutons d'actions rapides pour accéder 
+     directement aux rendez-vous ou à la liste des médecins.
+
+5. Gestion de Session :
+   - Mémorise l'historique de la conversation pendant la session pour 
+     garder le fil de la discussion.
+
+4. COMPOSANTS VISUELS (FRONTEND)
+--------------------------------
+Le chatbot ne renvoie pas que du texte, il affiche dynamiquement :
+- Des cartes de médecins (avec photo, spécialité et statut de disponibilité).
+- Des badges de rendez-vous.
+- Des indicateurs de progression pour les cycles de traitement.
+- Des alertes colorées selon la sévérité (Faible, Moyen, Critique).
+
+================================================================================
+FIN DU RÉSUMÉ
+================================================================================

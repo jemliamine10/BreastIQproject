@@ -1,0 +1,122 @@
+:host {
+  /* ── PALETTE - MATCHING LANDING PAGE ── */
+  --deep-blue:    #161545;
+  --old-rose:     #a95e92;
+  --lumi-pink:    #ebaece;
+  --soft-pink:    #fed7ec;
+  --white:        #FFFFFF;
+
+  --text-primary:   var(--deep-blue);
+  --text-secondary: #403f6f;
+  --text-muted:     #8888aa;
+  
+  --surface-soft:   #fdf6fa;
+}
+
+.selection-page {
+  min-height: 100vh;
+  background: var(--white);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* Background Effects from Landing */
+.bg-orb { position: fixed; border-radius: 50%; filter: blur(90px); pointer-events: none; z-index: 0; }
+.orb-1 { width: 600px; height: 600px; background: radial-gradient(circle, var(--soft-pink) 0%, transparent 70%); top: -200px; right: -200px; opacity: 0.6; }
+.orb-2 { width: 500px; height: 500px; background: radial-gradient(circle, var(--lumi-pink) 0%, transparent 70%); bottom: -100px; left: -100px; opacity: 0.4; }
+.grid-pattern {
+  position: fixed; inset: 0;
+  background-image: radial-gradient(rgba(22, 21, 69, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+.center-container {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  width: 100%;
+  padding: 2rem;
+  text-align: center;
+}
+
+.header-section { margin-bottom: 4rem; }
+.logo { display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 1.5rem; margin-bottom: 2rem; color: var(--deep-blue); text-decoration: none; }
+.logo-icon { color: var(--old-rose); }
+
+/* Logo image when using the real PNG */
+.logo .logo-img { width: 42px; height: 42px; object-fit: contain; display: block; }
+
+h1 { font-size: 3rem; font-weight: 800; margin-bottom: 1rem; color: var(--deep-blue); letter-spacing: -0.02em; }
+p { font-size: 1.25rem; color: var(--text-secondary); max-width: 600px; margin: 0 auto; }
+
+.cards-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  perspective: 1000px;
+}
+
+.role-card {
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 32px; /* --r-xl */
+  padding: 3rem;
+  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  position: relative;
+  box-shadow: 0 10px 40px -10px rgba(22, 21, 69, 0.05);
+  cursor: pointer;
+}
+
+.role-card:hover {
+  transform: translateY(-8px);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 20px 60px -15px rgba(22, 21, 69, 0.12), 0 0 30px rgba(169, 94, 146, 0.1);
+  border-color: rgba(169, 94, 146, 0.2);
+}
+
+.card-icon {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: var(--surface-soft);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--old-rose);
+  transition: transform 0.4s ease;
+}
+.role-card:hover .card-icon { transform: scale(1.1) rotate(5deg); background: var(--old-rose); color: white; }
+.card-icon svg { width: 40px; height: 40px; }
+
+.card-content h2 { font-size: 1.75rem; font-weight: 700; color: var(--deep-blue); margin-bottom: 0.5rem; }
+.card-content p { font-size: 1rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 2rem; }
+
+.btn-arrow {
+  font-weight: 600; color: var(--old-rose); opacity: 0; transform: translateY(10px); transition: all 0.3s ease;
+}
+.role-card:hover .btn-arrow { opacity: 1; transform: translateY(0); }
+
+.patient-card::before {
+  content: ''; position: absolute; inset: 0; border-radius: 32px;
+  background: linear-gradient(135deg, rgba(235, 174, 206, 0.2) 0%, transparent 100%);
+  opacity: 0; transition: opacity 0.4s ease; z-index: -1;
+}
+.doctor-card::before {
+  content: ''; position: absolute; inset: 0; border-radius: 32px;
+  background: linear-gradient(135deg, rgba(169, 94, 146, 0.1) 0%, transparent 100%);
+  opacity: 0; transition: opacity 0.4s ease; z-index: -1;
+}
+.role-card:hover::before { opacity: 1; }
+
+.footer-link { margin-top: 3rem; color: var(--text-muted); }
+.footer-link a { color: var(--deep-blue); font-weight: 600; text-decoration: none; margin-left: 0.5rem; transition: color 0.2s; }
+.footer-link a:hover { color: var(--old-rose); }

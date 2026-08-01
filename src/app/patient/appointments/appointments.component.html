@@ -1,0 +1,360 @@
+<div class="premium-calendar-wrapper animate-fade-in">
+  
+  <main class="main-content">
+    
+    <!-- Hero Month Title -->
+    <div class="month-hero-title">
+      <h1 class="hero-month">{{ currentMonthTitle }}</h1>
+      <div class="hero-underline"></div>
+    </div>
+    
+    <!-- Top Compact Header: Stats & Navigation -->
+    <header class="dashboard-stats-header">
+      <div class="header-main-info">
+        <div class="calendar-nav-group">
+          <button class="nav-btn-lux" (click)="previousMonth()" title="Mois précédent">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          <button class="btn-today-lux" (click)="goToToday()">Aujourd'hui</button>
+          <button class="nav-btn-lux" (click)="nextMonth()" title="Mois suivant">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="secondary-actions">
+        <button class="btn-add-lux" (click)="openCreateModal()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Nouveau RDV
+        </button>
+      </div>
+
+      <!-- Stats row (adapted from patient stats) -->
+      <div class="stats-grid-horizontal">
+        <div class="stat-card-lux">
+          <div class="stat-info">
+            <span class="val">{{ appointments.length }}</span>
+            <span class="lbl">TOTAL</span>
+          </div>
+        </div>
+        
+        @if (nextAppointment) {
+          <div class="stat-card-lux">
+            <div class="stat-info">
+              <span class="val pulse-text">Prochain</span>
+              <span class="lbl">{{ formatDateTime(nextAppointment.date) }}</span>
+            </div>
+          </div>
+        }
+
+        @if (stats; as s) {
+          <div class="stat-card-lux">
+            <div class="stat-info">
+              <span class="val">{{ s.progressPercentage }}%</span>
+              <span class="lbl">PARCOURS</span>
+            </div>
+          </div>
+        }
+      </div>
+    </header>
+
+    <!-- Filter Bar - Luxury Integrated -->
+    <section class="filter-bar-lux animate-slide-up">
+      <div class="filter-inputs">
+        <div class="input-wrap">
+          <select [(ngModel)]="filterStatus" class="lux-select">
+            <option value="">Tous les statuts</option>
+            <option value="SCHEDULED">Prévu</option>
+            <option value="DONE">Terminé</option>
+            <option value="CANCELLED">Annulé</option>
+            <option value="RESCHEDULED">Reprogrammé</option>
+          </select>
+        </div>
+        <div class="input-wrap search">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="search-ico"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" placeholder="Rechercher par titre..." [(ngModel)]="filterReason" class="lux-input" />
+        </div>
+      </div>
+      
+      <div class="view-toggle-lux">
+        <button class="toggle-btn" [class.active]="viewMode === 'month'" (click)="viewMode = 'month'">Mensuel</button>
+        <button class="toggle-btn" [class.active]="viewMode === 'list'" (click)="viewMode = 'list'">Liste</button>
+      </div>
+
+      @if (filterStatus || filterReason) {
+        <button class="btn-today-lux" (click)="filterStatus=''; filterReason=''" style="border-style: dashed; padding: 6px 16px;">
+          Réinitialiser
+        </button>
+      }
+    </section>
+
+    <!-- Calendar Viewport -->
+    <div class="calendar-viewport" [ngSwitch]="viewMode">
+      
+      <!-- Month Grid -->
+      <div class="month-grid-card animate-fade-in" *ngSwitchCase="'month'">
+        <div class="weekdays-lux">
+          <div class="wd" *ngFor="let day of weekDays">{{ day }}</div>
+        </div>
+        
+        <div class="grid-lux">
+          <div class="cell-lux" 
+               *ngFor="let day of calendarDays" 
+               [class.other-month]="!day.isCurrentMonth"
+               [class.is-today]="day.isToday"
+               [class.is-selected]="(selectedDate | date:'yyyy-MM-dd') === (day.date | date:'yyyy-MM-dd')"
+               (click)="selectDate(day)">
+            
+            <div class="cell-head">
+              <span class="num">{{ day.date | date:'d' }}</span>
+              <span class="dot-indicator" *ngIf="day.events.length > 0"></span>
+            </div>
+
+            <div class="cell-content-mini">
+              @for (ev of day.events | slice:0:1; track ev.id) {
+                <div class="mini-entry" [ngClass]="getEventClass(ev.type)">
+                  {{ ev.date | date:'HH:mm' }} · {{ ev.title }}
+                </div>
+              }
+              @if (day.events.length > 1) {
+                <div class="mini-entry" style="opacity: 0.6; background: none; color: var(--text-muted); font-size: 0.65rem;">
+                  +{{ day.events.length - 1 }} autre(s)
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- List View -->
+      <div class="list-view-lux animate-slide-up" *ngSwitchCase="'list'">
+        @if (filteredAppointments.length === 0) {
+          <div class="empty-state">
+            <div class="empty-icon">✨</div>
+            <h3>Aucun rendez-vous trouvé</h3>
+            <p>Essayez de modifier vos filtres ou sélectionnez une autre période.</p>
+          </div>
+        }
+
+        @for (app of filteredAppointments; track app.id) {
+          <div class="appointment-row-lux animate-slide-up" [style.animation-delay]="'0.05s'">
+            <div class="row-time">
+              <strong>{{ app.date | date:'dd MMM' }}</strong>
+              <span>{{ app.date | date:'HH:mm' }}</span>
+            </div>
+            <div class="row-main">
+              <span class="status-pill-lux" [ngClass]="'status-' + app.status.toLowerCase()">{{ app.status }}</span>
+              <h4>{{ app.title || 'Consultation' }}</h4>
+              <p>{{ app.doctor.firstName + ' ' + app.doctor.lastName || ('ID Méd: ' + app.doctor.id) }}</p>
+            </div>
+            <div class="row-actions">
+              <button class="btn-details-lux" (click)="viewDetailsAndConfirm(app)">Détails</button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Selected Day Details Panel -->
+    @if (viewMode === 'month') {
+      <section class="day-focus-panel animate-slide-up">
+        <div class="panel-header">
+          <div class="date-title">
+            <p>Zoom sur la journée</p>
+            <h3>{{ currentDayTitle }}</h3>
+          </div>
+          <div class="daily-stat">{{ selectedDateAppointments.length }} Évènement(s)</div>
+        </div>
+
+        <div class="panel-content">
+          @if (selectedDateAppointments.length === 0) {
+            <div class="empty-state" style="padding: 20px;">
+              <p>Aucun évènement pour ce jour.</p>
+            </div>
+          }
+
+          @for (ev of selectedDateAppointments; track ev.id) {
+            <div class="appointment-card-premium animate-slide-up">
+              <div class="card-lux-time">
+                <span class="sh">{{ ev.date | date:'HH:mm' }}</span>
+              </div>
+              <div class="card-lux-body">
+                <div class="card-lux-header">
+                  <span class="doctor-id-tag">Doc: {{ ev.doctor.firstName }} {{ ev.doctor.lastName }}</span>
+                  <span class="status-pill-lux" [ngClass]="'status-' + ev.status.toLowerCase()">{{ ev.status }}</span>
+                </div>
+                <h4 class="consultation-reason">{{ ev.title }}</h4>
+                <div class="card-lux-meta">
+                  <div class="meta-bit">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                    <span>{{ ev.location || 'Localisation' }}</span>
+                  </div>
+                  <div class="meta-bit">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v10l4.5 4.5"></path><circle cx="12" cy="12" r="10"></circle></svg>
+                    <span>{{ ev.type }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="card-lux-actions">
+                <button class="btn-details-lux" (click)="viewDetailsAndConfirm(ev)">Gérer</button>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+    }
+
+    <!-- ── TIMELINE TRACK ── -->
+    <section class="day-focus-panel animate-slide-up" style="margin-top: 40px;">
+      <div class="panel-header">
+        <div class="date-title">
+          <p>Votre Parcours de Soin</p>
+          <h3>Progression de la prise en charge</h3>
+        </div>
+        <div class="daily-stat">{{ stats?.progressPercentage ?? 0 }}% complété</div>
+      </div>
+
+      <div class="list-view-lux" style="padding-top: 20px;">
+        @for (event of timeline; track event.label) {
+          <div class="appointment-row-lux" [ngClass]="getTimelineClass(event.status)" style="border-left: 4px solid var(--border-light);">
+            <div class="row-time" style="min-width: 120px;">
+              <strong style="font-size: 0.9rem;">{{ event.date | date:'dd MMM yyyy' }}</strong>
+              @if (event.status === 'COMPLETED') { <span style="color: #10b981;">Finalisé</span> }
+              @if (event.status === 'ACTIVE') { <span style="color: #4f46e5;">En cours</span> }
+            </div>
+            <div class="row-main">
+              <h4>{{ event.label }}</h4>
+              <p>{{ event.description }}</p>
+            </div>
+            <div class="row-status" style="font-size: 2rem;">
+              @if (event.status === 'COMPLETED') { <span>✅</span> }
+              @if (event.status === 'ACTIVE') { <span class="pulse-text">🩺</span> }
+              @if (event.status === 'UPCOMING') { <span>📋</span> }
+            </div>
+          </div>
+        }
+
+        @if (!isLoading && !timeline.length) {
+          <div class="empty-state" style="padding: 20px;">
+            <p>Aucun évènement dans votre timeline actuellement.</p>
+          </div>
+        }
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Loading Overlay -->
+  @if (isLoading) {
+    <div class="lux-loading-overlay">
+      <div class="loader-container">
+        <div class="premium-spinner"></div>
+        <p style="margin-top: 15px; font-weight: 700; color: var(--deep-blue);">Chargement Premium...</p>
+      </div>
+    </div>
+  }
+
+  <!-- ULTRA PREMIUM CREATION MODAL -->
+  @if (isCreateModalOpen) {
+    <div class="lux-modal-overlay" (click)="closeCreateModal()">
+      <div class="lux-modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-glass-header">
+          <div class="header-text">
+            <h2>Planification de Soin</h2>
+            <p>Réservez votre créneau avec l'un de vos spécialistes certifiés</p>
+          </div>
+          <button class="btn-close-circle" (click)="closeCreateModal()">×</button>
+        </div>
+
+        <div class="modal-scroll-area">
+          <form class="form-grid-lux">
+            <div class="lux-field-group">
+              <label class="lux-label">Choisir un Spécialiste</label>
+              <select class="lux-input-styled" [(ngModel)]="createForm.doctorId" [ngModelOptions]="{ standalone: true }" (ngModelChange)="onDoctorChange()">
+                <option value="" disabled>Sélectionnez un médecin...</option>
+                @for (doctor of availableDoctors; track doctor.id) {
+                  <option [value]="doctor.id">
+                    {{ doctor.firstName }} {{ doctor.lastName }} · {{ doctor.specialty || 'Généraliste' }}
+                  </option>
+                }
+              </select>
+            </div>
+
+            <div class="lux-field-group">
+              <label class="lux-label">Mode de Consultation</label>
+              <select class="lux-input-styled" [(ngModel)]="createForm.mode" [ngModelOptions]="{ standalone: true }">
+                <optgroup label="Option à distance">
+                  <option value="VIDEO">Consultation Vidéo</option>
+                </optgroup>
+                <optgroup label="Présentiel">
+                  <option value="IN_PERSON">Cabinet Médical</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <div class="lux-field-group">
+              <label class="lux-label">Date du RDV</label>
+              <input type="date" class="lux-input-styled" [(ngModel)]="createForm.date" [ngModelOptions]="{ standalone: true }" (ngModelChange)="onCreateDateChange()">
+            </div>
+
+            <div class="lux-field-group">
+              <label class="lux-label">Timezone Détectée</label>
+              <input type="text" class="lux-input-styled" [value]="selectedDoctorTimezone" disabled>
+            </div>
+
+            <div class="lux-field-group span-full">
+              <div class="slots-container-lux">
+                <div class="lux-label" style="display: flex; justify-content: space-between;">
+                  <span>Créneaux Disponibles</span>
+                  @if (slotsLoading) { <span class="pulse-text">Synchronisation...</span> }
+                </div>
+                
+                @if (!slotsLoading && dailySlots.length > 0) {
+                  <div class="slot-grid-lux">
+                    @for (slot of dailySlots; track slot.id) {
+                      <button type="button" 
+                              class="slot-chip" 
+                              [class.active]="isSlotSelected(slot)"
+                              [disabled]="slot.status !== 'AVAILABLE'"
+                              (click)="selectSlot(slot)">
+                        <span class="chip-time">{{ slot.startAt | date:'HH:mm' }}</span>
+                        <span class="chip-status">{{ slotStatusLabel(slot.status) }}</span>
+                      </button>
+                    }
+                  </div>
+                }
+
+                @if (!slotsLoading && dailySlots.length === 0) {
+                  <div class="empty-state" style="padding: 20px;">
+                    <p>Aucun créneau disponible pour cette sélection.</p>
+                  </div>
+                }
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="modal-footer-lux">
+          <button class="btn-lux-cancel" (click)="closeCreateModal()">Annuler</button>
+          <button class="btn-lux-primary" 
+                  (click)="submitCreateForm()"
+                  [disabled]="isLoading || !selectedSlotId || !createForm.doctorId">
+            Confirmer la Réservation
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Error Toast -->
+  @if (error) {
+    <div class="lux-loading-overlay" style="background: rgba(22, 21, 69, 0.4);">
+      <div class="lux-modal-card" style="max-width: 400px; padding: 30px; text-align: center;">
+        <h3 style="color: #ef4444;">Attention</h3>
+        <p style="margin: 20px 0;">{{ error }}</p>
+        <button class="btn-lux-primary" (click)="error=''" style="background: var(--deep-blue);">Compris</button>
+      </div>
+    </div>
+  }
+
+</div>

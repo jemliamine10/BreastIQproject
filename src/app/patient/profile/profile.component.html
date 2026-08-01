@@ -1,0 +1,303 @@
+<div class="mesh-bg"></div>
+
+<div class="mesh-bg"></div>
+
+<div class="profile-container" *ngIf="!isLoading; else loadingTpl">
+    <div *ngIf="profileData; else noProfile" style="animation: slideUpFade 0.8s cubic-bezier(0.16, 1, 0.3, 1);">
+
+        <!-- ╔═══════════════════════════════╗
+             ║   TOP HERO — PROFILE HEADER   ║
+             ╚═══════════════════════════════╝ -->
+        <!-- Hidden file input -->
+        <input type="file" id="photo-upload-input" accept="image/jpeg,image/png,image/webp,image/gif"
+            (change)="onPhotoSelected($event)" style="display:none;">
+
+        <header class="profile-hero">
+            <div class="avatar-container" (click)="triggerFileInput()">
+                <div class="avatar-orbit">
+                    @if (profilePhoto) {
+                        <img [src]="profilePhoto" alt="Avatar">
+                    } @else {
+                        <div class="avatar-initials">{{ userInitials }}</div>
+                    }
+                </div>
+                <div class="status-ring"></div>
+                <div class="avatar-upload-overlay">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                        <circle cx="12" cy="13" r="4"></circle>
+                    </svg>
+                    <span>Modifier</span>
+                </div>
+            </div>
+
+            <div class="hero-main">
+                <span class="role-pill">Patient Certifié</span>
+                <h1>{{ profileData.firstName }} {{ profileData.lastName }}</h1>
+
+                <div class="hero-stats-row">
+                    <div class="hero-stat-item">
+                        <span class="h-stat-label">Email</span>
+                        <span class="h-stat-value">{{ profileData.email }}</span>
+                    </div>
+                    <div class="hero-stat-item">
+                        <span class="h-stat-label">Identifiant Patient</span>
+                        <span class="h-stat-value">#{{ profileData.medicalRecordNumber || 'Non assigné' }}</span>
+                    </div>
+                    <div class="hero-stat-item">
+                        <span class="h-stat-label">Membre depuis</span>
+                        <span class="h-stat-value">{{ getJoinDate() }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hero-actions">
+                @if (hasPhoto) {
+                    <button class="icon-box photo-delete-btn" style="width: 48px; height: 48px; border-radius: 16px;" 
+                        (click)="deletePhoto(); $event.stopPropagation()" title="Supprimer la photo">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                    </button>
+                }
+                <button class="icon-box" style="width: 64px; height: 64px; border-radius: 20px;" (click)="triggerFileInput()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                        <circle cx="12" cy="13" r="4"></circle>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- ╔═══════════════════════════════╗
+             ║   BENTO GRID — PROFILE BODY   ║
+             ╚═══════════════════════════════╝ -->
+        <div class="bento-grid">
+
+            <!-- CARD: Personal Info (Lg) -->
+            <div class="bento-card lg">
+                <div class="card-title-row">
+                    <h2>Informations Personnelles</h2>
+                    <div class="icon-box">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="profile-details">
+                    <div class="detail-item">
+                        <span class="d-label">Date de Naissance</span>
+                        <span class="d-value">{{ (profileData.dateOfBirth | date:'longDate') || '—' }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="d-label">Âge Actuel</span>
+                        <span class="d-value">{{ age }} ans</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="d-label">Genre</span>
+                        <span class="d-value">{{ profileData.gender === 'FEMALE' ? 'Femme' : (profileData.gender ===
+                            'MALE' ? 'Homme' : 'Autre') }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="d-label">Lieu de résidence</span>
+                        <span class="d-value">{{ profileData.city || 'Non renseigné' }}, {{ profileData.country
+                            }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="d-label">Téléphone</span>
+                        <span class="d-value">{{ profileData.phone || 'Non renseigné' }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="d-label">Contact d'Urgence</span>
+                        <span class="d-value" style="color: var(--p-main)">{{ profileData.emergencyContactName || 'Non
+                            renseigné' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD: Health Metrics (Md) -->
+            <div class="bento-card md tall">
+                <div class="card-title-row">
+                    <h2>Indicateurs Santé</h2>
+                    <div class="icon-box">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="kpi-grid">
+                    <div class="kpi-item">
+                        <span class="kpi-val">{{ profileData.heightCm || '--' }}</span>
+                        <div class="kpi-label">
+                            <span class="kpi-name">Taille</span>
+                            <span class="kpi-sub">Centimètres</span>
+                        </div>
+                    </div>
+                    <div class="kpi-item">
+                        <span class="kpi-val">{{ profileData.weightKg || '--' }}</span>
+                        <div class="kpi-label">
+                            <span class="kpi-name">Poids</span>
+                            <span class="kpi-sub">Kilogrammes</span>
+                        </div>
+                    </div>
+                    <div class="kpi-item" style="background: var(--p-light); border-color: rgba(169, 94, 146, 0.2);">
+                        <span class="kpi-val" style="color: var(--p-dark)">{{ bmi }}</span>
+                        <div class="kpi-label">
+                            <span class="kpi-name">IMC</span>
+                            <span class="kpi-sub" [style.color]="'var(--p-dark)'">{{ bmiStatus }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD: Allergies (Md) -->
+            <div class="bento-card md">
+                <div class="card-title-row">
+                    <h2>Allergies</h2>
+                    <div class="icon-box">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path
+                                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                            </path>
+                            <line x1="12" y1="9" x2="12" y2="13"></line>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="tag-wrap" *ngIf="allergies.length > 0; else emptyAll">
+                    <div *ngFor="let a of allergies" class="premium-tag" [ngClass]="getAllergyClass(a.severity)">
+                        {{ a.substance }}
+                    </div>
+                </div>
+                <ng-template #emptyAll>
+                    <p style="color: var(--text-secondary); font-style: italic;">Aucune allergie critique enregistrée.
+                    </p>
+                </ng-template>
+            </div>
+
+            <!-- CARD: Treatments (Full) -->
+            <div class="bento-card full">
+                <div class="card-title-row">
+                    <h2>Parcours de Soins & Traitements</h2>
+                    <div class="icon-box">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 4H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path>
+                            <path d="M16 2v4"></path>
+                            <path d="M8 2v4"></path>
+                            <path d="M3 10h18"></path>
+                        </svg>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 2rem;"
+                    *ngIf="treatments.length > 0; else noTreat">
+                    <div *ngFor="let t of treatments" class="treatment-card">
+                        <div class="treat-date">Depuis le {{ t.startDate | date:'MMMM yyyy' }}</div>
+                        <span class="treat-name">{{ t.name }}</span>
+                        <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6;">
+                            {{ t.description }}
+                        </p>
+                    </div>
+                </div>
+                <ng-template #noTreat>
+                    <div
+                        style="padding: 2rem; border: 2px dashed #f1f1f5; border-radius: 24px; text-align: center; color: var(--text-secondary);">
+                        Aucun traitement actif à afficher pour le moment.
+                    </div>
+                </ng-template>
+            </div>
+        </div>
+
+        <!-- FOOTER ACTIONS -->
+        <div class="actions-zone">
+            <button class="btn-wow secondary">
+                Paramètres de confidentialité
+            </button>
+            <button class="btn-wow primary">
+                Mettre à jour mes informations
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- LOADING STATE -->
+<ng-template #loadingTpl>
+    <div class="loading-screen">
+        <div class="shimmer-circle"></div>
+        <h2 style="font-weight: 850; letter-spacing: -0.02em;">Chargement de votre univers...</h2>
+        <div class="loader-line"
+            style="width: 200px; height: 6px; background: #f1f1f5; border-radius: 10px; overflow: hidden;">
+            <div
+                style="width: 40%; height: 100%; background: var(--p-main); animation: slideProgress 2s infinite ease-in-out;">
+            </div>
+        </div>
+    </div>
+    <style>
+        @keyframes slideProgress {
+            0% {
+                transform: translateX(-100%);
+            }
+
+            100% {
+                transform: translateX(300%);
+            }
+        }
+    </style>
+</ng-template>
+
+<!-- ERROR STATE -->
+<ng-template #noProfile>
+    <div class="loading-screen">
+        <div class="icon-box"
+            style="width: 100px; height: 100px; background: #fff1f2; color: #e11d48; border-radius: 30px; margin-bottom: 2rem;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+        </div>
+        <h2 style="font-weight: 900; font-size: 2.5rem; letter-spacing: -0.04em; color: var(--text-primary);">Oups, une
+            erreur...</h2>
+        <p style="color: var(--text-secondary); font-size: 1.2rem; max-width: 400px; text-align: center;">Nous ne
+            parvenons pas à synchroniser vos données patient pour le moment.</p>
+        <button class="btn-wow primary" (click)="ngOnInit()" style="margin-top: 2rem;">Réessayer</button>
+    </div>
+</ng-template>
+
+<!-- PHOTO UPLOAD MODAL -->
+@if (showPhotoModal) {
+    <div class="photo-modal-backdrop" (click)="cancelUpload()">
+        <div class="photo-modal" (click)="$event.stopPropagation()">
+            <button class="photo-modal-close" (click)="cancelUpload()">✕</button>
+            <h3>Aperçu de votre photo</h3>
+            <div class="photo-preview-container">
+                @if (photoPreview) {
+                    <img [src]="photoPreview" alt="Aperçu" class="photo-preview-img">
+                }
+            </div>
+            <div class="photo-modal-actions">
+                <button class="btn-wow secondary" (click)="cancelUpload()" [disabled]="isUploadingPhoto">Annuler</button>
+                <button class="btn-wow primary" (click)="confirmUpload()" [disabled]="isUploadingPhoto">
+                    @if (isUploadingPhoto) {
+                        <span class="upload-spinner"></span> Envoi...
+                    } @else {
+                        Confirmer
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+}

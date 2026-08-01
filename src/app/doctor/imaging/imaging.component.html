@@ -1,0 +1,1398 @@
+<!-- â•â•â• Background Orbs â•â•â• -->
+<div class="orb orb--1"></div>
+<div class="orb orb--2"></div>
+<div class="orb orb--3"></div>
+
+<div class="imaging-page" [class.dark-premium]="state === 'risk-prediction' || state === 'risk-result'">
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â• HEADER â•â•â•â•â•â•â•â•â•â•â• -->
+  <header class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 7l4.41-4.41A2 2 0 017.83 2h8.34a2 2 0 011.42.59L22 7"/>
+          <path d="M4 7v13a2 2 0 002 2h12a2 2 0 002-2V7"/>
+          <circle cx="12" cy="14" r="3"/>
+        </svg>
+        Imagerie IA
+        <span class="ai-badge">AI</span>
+      </h1>
+      <p class="page-subtitle">Analyse intelligente de mammographies par deep learning</p>
+    </div>
+
+    <!-- AI Status -->
+    <div class="ai-status" [class.online]="aiAvailable" [class.checking]="aiChecking">
+      <span class="status-dot"></span>
+      @if (aiChecking) {
+        <span>Vérification du service…</span>
+      } @else if (aiAvailable) {
+        <span>Service IA opérationnel</span>
+      } @else {
+        <span>Service IA indisponible</span>
+      }
+    </div>
+  </header>
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â• PATIENT SELECTION STATE â•â•â•â•â•â•â•â•â•â•â• -->
+  @if (state === 'select-patient') {
+    <div class="patient-section">
+      <!-- Selected patient card (when chosen) -->
+      @if (selectedPatient) {
+        <div class="selected-patient-banner">
+          <div class="spb-left">
+            <div class="spb-avatar">
+              @if (getPatientPhoto(selectedPatient)) {
+                <img [src]="getPatientPhoto(selectedPatient)" alt="" class="spb-avatar-img"/>
+              } @else {
+                <span class="spb-avatar-letter">{{ getPatientInitials(selectedPatient) }}</span>
+              }
+            </div>
+            <div class="spb-info">
+              <span class="spb-name">{{ selectedPatient.firstName }} {{ selectedPatient.lastName }}</span>
+              <span class="spb-meta">
+                @if (selectedPatient.dateOfBirth) { {{ getAge(selectedPatient.dateOfBirth) }} ans · }
+                {{ selectedPatient.email }}
+              </span>
+            </div>
+          </div>
+          <div class="spb-actions">
+            <button class="btn-primary" (click)="goToUpload()" [disabled]="!aiAvailable">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              Nouvelle analyse
+            </button>
+
+            <button class="btn-primary btn-risk" (click)="goToRiskPrediction()" [disabled]="!riskServiceAvailable">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+              </svg>
+              Prédiction de Risque
+            </button>
+            <button class="btn-outline" (click)="deselectPatient()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+              Changer
+            </button>
+          </div>
+        </div>
+
+        <!-- History Section -->
+        @if (historyLoading) {
+          <div class="history-loading">
+            <div class="mini-spinner"></div>
+            <span>Chargement de l'historique…</span>
+          </div>
+        } @else if (historyItems.length > 0) {
+          <div class="history-section">
+            <h3 class="history-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+              Historique des analyses
+              <span class="history-count">{{ historyItems.length }}</span>
+            </h3>
+            <div class="history-grid">
+              @for (item of historyItems; track item.id) {
+                <button class="history-card" (click)="viewHistoryDetail(item)" [ngClass]="getVerdictClass(item.globalVerdict)">
+                  <div class="hc-top">
+                    <span class="hc-verdict-badge" [ngClass]="getVerdictClass(item.globalVerdict)">{{ item.globalVerdict }}</span>
+                    @if (item.hasReport) {
+                      <span class="hc-report-badge">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/></svg>
+                        Rapport
+                      </span>
+                    }
+                  </div>
+                  <div class="hc-date">{{ formatDate(item.analysisDate) }}</div>
+                  <div class="hc-stats">
+                    <span class="hc-stat">
+                      <strong>{{ (item.globalConfidence * 100) | number:'1.0-0' }}%</strong> confiance
+                    </span>
+                    <span class="hc-stat">
+                      <strong>{{ item.detectionsCount }}</strong> détection{{ item.detectionsCount > 1 ? 's' : '' }}
+                    </span>
+                  </div>
+                </button>
+              }
+            </div>
+          </div>
+        } @else {
+          <div class="history-empty glass-card">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+            </svg>
+            <p>Aucune analyse précédente pour ce patient</p>
+          </div>
+        }
+
+      } @else {
+        <!-- â•â•â• ULTRA WOW HERO SECTION â•â•â• -->
+        <div class="hero-section">
+          <div class="hero-grid-bg"></div>
+          <div class="hero-glow hero-glow--1"></div>
+          <div class="hero-glow hero-glow--2"></div>
+
+          <div class="hero-content">
+            <span class="hero-eyebrow">ðŸ§¬ Intelligence Artificielle Médicale</span>
+            <h2 class="hero-title">Analyse de<br/><span class="hero-gradient-text">Mammographies par IA</span></h2>
+            <p class="hero-desc">
+              Détection automatique de masses et calcifications, classification bénin/malin,
+              prédiction de risque de récurrence et génération de rapports médicaux â€” le tout propulsé par le deep learning.
+            </p>
+          </div>
+
+          <!-- Feature Cards -->
+          <div class="hero-features">
+            <div class="hero-feat-card feat-detect">
+              <div class="hfc-icon-ring">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+              </div>
+              <h4 class="hfc-title">Détection IA</h4>
+              <p class="hfc-desc">Mask R-CNN + ConvNeXt pour la localisation précise des lésions mammaires</p>
+              <div class="hfc-tech">
+                <span class="hfc-tag">Mask R-CNN</span>
+                <span class="hfc-tag">ConvNeXt</span>
+              </div>
+            </div>
+
+            <div class="hero-feat-card feat-risk">
+              <div class="hfc-icon-ring">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              </div>
+              <h4 class="hfc-title">Prédiction de Risque</h4>
+              <p class="hfc-desc">Modèle CatBoost calibré sur METABRIC â€” 22 biomarqueurs analysés</p>
+              <div class="hfc-tech">
+                <span class="hfc-tag">CatBoost</span>
+                <span class="hfc-tag">METABRIC</span>
+              </div>
+            </div>
+
+            <div class="hero-feat-card feat-report">
+              <div class="hfc-icon-ring">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </div>
+              <h4 class="hfc-title">Rapport Automatique</h4>
+              <p class="hfc-desc">Génération IA de rapports BI-RADS complets en français après chaque analyse</p>
+              <div class="hfc-tech">
+                <span class="hfc-tag">LLM</span>
+                <span class="hfc-tag">BI-RADS</span>
+              </div>
+            </div>
+
+            <div class="hero-feat-card feat-classify">
+              <div class="hfc-icon-ring">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <h4 class="hfc-title">Classification</h4>
+              <p class="hfc-desc">SVM + DenseNet121 & ConvNeXtTiny pour le diagnostic bénin/malin</p>
+              <div class="hfc-tech">
+                <span class="hfc-tag">DenseNet121</span>
+                <span class="hfc-tag">SVM</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- â•â•â• PREMIUM PATIENT SELECTOR â•â•â• -->
+        <div class="patient-selector-premium">
+          <div class="psp-top">
+            <div class="psp-title-row">
+              <div class="psp-icon-wrap">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+                </svg>
+              </div>
+              <div>
+                <h3 class="psp-title">Sélectionnez un patient</h3>
+                <p class="psp-sub">pour lancer une analyse mammographique</p>
+              </div>
+              @if (!patientsLoading) {
+                <span class="psp-count">{{ filteredPatients.length }} patient{{ filteredPatients.length > 1 ? 's' : '' }}</span>
+              }
+            </div>
+            <div class="psp-search">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+              <input type="text" placeholder="Rechercher un patient…" [(ngModel)]="patientSearch" />
+            </div>
+          </div>
+
+          @if (patientsLoading) {
+            <div class="psp-loading"><div class="mini-spinner"></div><span>Chargement…</span></div>
+          } @else if (filteredPatients.length === 0) {
+            <div class="psp-empty">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M8 15h8M9 9h.01M15 9h.01"/></svg>
+              <p>Aucun patient trouvé</p>
+            </div>
+          } @else {
+            <div class="psp-grid">
+              @for (p of filteredPatients; track p.patientProfileId) {
+                <button class="psp-card" (click)="selectPatient(p)">
+                  <div class="psp-card-avatar">
+                    @if (getPatientPhoto(p)) {
+                      <img [src]="getPatientPhoto(p)" alt="" class="psp-card-img"/>
+                    } @else {
+                      <span class="psp-card-initials">{{ getPatientInitials(p) }}</span>
+                    }
+                    <span class="psp-online-dot"></span>
+                  </div>
+                  <div class="psp-card-body">
+                    <span class="psp-card-name">{{ p.firstName }} {{ p.lastName }}</span>
+                    <span class="psp-card-email">{{ p.email }}</span>
+                  </div>
+                  <div class="psp-card-footer">
+                    @if (p.dateOfBirth) {
+                      <span class="psp-age-badge">{{ getAge(p.dateOfBirth) }} ans</span>
+                    }
+                    <span class="psp-card-cta">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                      Analyser
+                    </span>
+                  </div>
+                </button>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â• UPLOAD STATE â•â•â•â•â•â•â•â•â•â•â• -->
+  @if (state === 'uploading') {
+    <div class="upload-section">
+      <!-- Back button -->
+      <button class="btn-back" (click)="backToPatientView()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        Retour
+      </button>
+
+      <!-- Patient reminder pill -->
+      @if (selectedPatient) {
+        <div class="patient-pill">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          {{ selectedPatient.firstName }} {{ selectedPatient.lastName }}
+        </div>
+      }
+
+      <div class="upload-zone"
+           [class.drag-over]="dragOver"
+           (dragover)="onDragOver($event)"
+           (dragleave)="onDragLeave($event)"
+           (drop)="onDrop($event)"
+           (click)="fileInput.click()">
+
+        <input #fileInput type="file" hidden
+               accept=".png,.jpg,.jpeg,.dcm,.dicom"
+               (change)="onFileSelected($event)" />
+
+        <div class="upload-icon-wrap">
+          <div class="scan-ring"></div>
+          <svg class="upload-icon" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+        </div>
+
+        <h2 class="upload-title">Déposez une mammographie</h2>
+        <p class="upload-desc">Glissez-déposez ou cliquez pour sélectionner</p>
+
+        <div class="upload-formats">
+          <span class="format-badge">PNG</span>
+          <span class="format-badge">JPG</span>
+          <span class="format-badge">JPEG</span>
+          <span class="format-badge">DICOM</span>
+        </div>
+
+        <p class="upload-limit">Taille maximale : 60 Mo</p>
+      </div>
+
+      <!-- Info cards -->
+      <div class="info-row">
+        <div class="info-card">
+          <div class="info-icon info-icon--detect">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+            </svg>
+          </div>
+          <div class="info-text">
+            <span class="info-label">Détection</span>
+            <span class="info-desc">Mask R-CNN avec backbone ConvNeXt</span>
+          </div>
+        </div>
+        <div class="info-card">
+          <div class="info-icon info-icon--classify">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <div class="info-text">
+            <span class="info-label">Classification</span>
+            <span class="info-desc">SVM + DenseNet121 &amp; ConvNeXtTiny</span>
+          </div>
+        </div>
+        <div class="info-card">
+          <div class="info-icon info-icon--morpho">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+            </svg>
+          </div>
+          <div class="info-text">
+            <span class="info-label">Morphologie</span>
+            <span class="info-desc">Aire, périmètre, circularité, texture</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â• ANALYZING STATE â•â•â•â•â•â•â•â•â•â•â• -->
+  @if (state === 'analyzing') {
+    <div class="analyzing-section">
+      <div class="analyzing-card">
+        <div class="analyzing-preview">
+          @if (previewUrl) {
+            <img [src]="previewUrl" alt="Mammographie" class="preview-img" />
+          } @else {
+            <div class="preview-placeholder">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 7l4.41-4.41A2 2 0 017.83 2h8.34a2 2 0 011.42.59L22 7"/>
+                <path d="M4 7v13a2 2 0 002 2h12a2 2 0 002-2V7"/>
+                <circle cx="12" cy="14" r="3"/>
+              </svg>
+            </div>
+          }
+          <div class="scan-line"></div>
+          <div class="scan-overlay"></div>
+        </div>
+
+        <div class="analyzing-content">
+          <div class="analyzing-spinner">
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring spinner-ring--2"></div>
+            <div class="spinner-dot"></div>
+          </div>
+          <h2 class="analyzing-title">Analyse en cours</h2>
+          @if (selectedPatient) {
+            <p class="analyzing-patient">{{ selectedPatient.firstName }} {{ selectedPatient.lastName }}</p>
+          }
+          <p class="analyzing-step">{{ progressMessages[currentProgressIndex] }}</p>
+          </div>
+        </div>
+      </div>
+  }
+
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â• ULTRA PREMIUM RISK PREDICTION WIZARD â•â•â•â•â•â•â•â•â•â•â• -->
+  
+  @if (state === 'risk-prediction') {
+    <div class="rp-wizard-wrap">
+      <button class="btn-back rp-back" (click)="backToPatientView()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        Retour au Patient
+      </button>
+
+      <!-- Wizard Header -->
+      <div class="rp-hero">
+        <div class="rp-hero-glow"></div>
+        <div class="rp-hero-content">
+          <div class="rp-hero-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+            <div class="rp-hero-pulse"></div>
+          </div>
+          <div>
+            <h2 class="rp-hero-title">Laboratoire de Prédiction IA</h2>
+            <p class="rp-hero-sub">CatBoost · METABRIC · 22 Biomarqueurs · Récurrence à 10 ans</p>
+          </div>
+        </div>
+
+        <!-- Patient pill -->
+        @if (selectedPatient) {
+          <div class="rp-patient-chip">
+            <div class="rp-pc-avatar">
+              @if (getPatientPhoto(selectedPatient)) {
+                <img [src]="getPatientPhoto(selectedPatient)" alt=""/>
+              } @else {
+                <span>{{ getPatientInitials(selectedPatient) }}</span>
+              }
+            </div>
+            <div class="rp-pc-info">
+              <span class="rp-pc-name">{{ selectedPatient.firstName }} {{ selectedPatient.lastName }}</span>
+              <span class="rp-pc-meta">
+                @if (selectedPatient.dateOfBirth) { {{ getAge(selectedPatient.dateOfBirth) }} ans · }
+                {{ selectedPatient.email }}
+              </span>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Step Progress Bar -->
+      <div class="rp-progress">
+        @for (step of riskSteps; track $index) {
+          <button class="rp-step-item" 
+                  [class.active]="currentRiskStep === $index"
+                  [class.completed]="currentRiskStep > $index"
+                  (click)="goToRiskStep($index)">
+            <div class="rp-step-num">
+              @if (currentRiskStep > $index) {
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              } @else {
+                {{ $index + 1 }}
+              }
+            </div>
+            <span class="rp-step-label">{{ step }}</span>
+          </button>
+          @if ($index < riskSteps.length - 1) {
+            <div class="rp-step-line" [class.done]="currentRiskStep > $index"></div>
+          }
+        }
+      </div>
+
+      <!-- Wizard Body -->
+      <div class="rp-wizard-body" [class.animating]="riskFormAnimating">
+
+        <!-- STEP 0: Profil Clinique -->
+        @if (currentRiskStep === 0) {
+          <div class="rp-step-card">
+            <div class="rp-sc-header">
+              <div class="rp-sc-icon" style="--sc-color: var(--old-rose);">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </div>
+              <div>
+                <h3 class="rp-sc-title">Profil Clinique</h3>
+                <p class="rp-sc-desc">Informations démographiques et état clinique du patient</p>
+              </div>
+            </div>
+            <div class="rp-fields-grid">
+              <div class="rp-field">
+                <label>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                  Âge au Diagnostic
+                  <span class="rp-auto-tag">AUTO</span>
+                </label>
+                <input type="number" [(ngModel)]="riskForm.age_at_diagnosis" placeholder="Ex: 55"/>
+              </div>
+              <div class="rp-field">
+                <label>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z"/></svg>
+                  État Ménopausique
+                </label>
+                <select [(ngModel)]="riskForm.inferred_menopausal_state">
+                  <option value="Pre">Pré-ménopause</option>
+                  <option value="Post">Post-ménopause</option>
+                  <option value="Unknown">Inconnu</option>
+                </select>
+              </div>
+              <div class="rp-field">
+                <label>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  Latéralité
+                </label>
+                <select [(ngModel)]="riskForm.primary_tumor_laterality">
+                  <option value="Left">Gauche</option>
+                  <option value="Right">Droite</option>
+                  <option value="Unknown">Inconnu</option>
+                </select>
+              </div>
+              <div class="rp-field">
+                <label>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+                  Cellularité
+                </label>
+                <select [(ngModel)]="riskForm.cellularity">
+                  <option value="High">Élevée</option>
+                  <option value="Moderate">Modérée</option>
+                  <option value="Low">Faible</option>
+                  <option value="Unknown">Inconnu</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- STEP 1: Architecture Tumorale -->
+        @if (currentRiskStep === 1) {
+          <div class="rp-step-card">
+            <div class="rp-sc-header">
+              <div class="rp-sc-icon" style="--sc-color: #7c6cc4;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+              </div>
+              <div>
+                <h3 class="rp-sc-title">Architecture Tumorale</h3>
+                <p class="rp-sc-desc">Caractéristiques physiques et staging de la tumeur</p>
+              </div>
+            </div>
+            <div class="rp-fields-grid">
+              <div class="rp-field">
+                <label>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                  Taille (mm)
+                  <span class="rp-auto-tag">AUTO</span>
+                </label>
+                <input type="number" [(ngModel)]="riskForm.tumor_size" placeholder="Ex: 25"/>
+              </div>
+              <div class="rp-field">
+                <label>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                  Grade Histologique
+                  <span class="rp-auto-tag">AUTO</span>
+                </label>
+                <select [(ngModel)]="riskForm.neoplasm_histologic_grade">
+                  <option [value]="1">Grade 1 (Faible)</option>
+                  <option [value]="2">Grade 2 (Intermédiaire)</option>
+                  <option [value]="3">Grade 3 (Élevé)</option>
+                </select>
+              </div>
+              <div class="rp-field">
+                <label>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+                  Stade Tumoral
+                </label>
+                <select [(ngModel)]="riskForm.tumor_stage">
+                  <option [value]="0">Stage 0</option>
+                  <option [value]="1">Stage 1</option>
+                  <option [value]="2">Stage 2</option>
+                  <option [value]="3">Stage 3</option>
+                  <option [value]="4">Stage 4</option>
+                </select>
+              </div>
+              <div class="rp-field">
+                <label>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  Ganglions Positifs
+                </label>
+                <input type="number" [(ngModel)]="riskForm.lymph_nodes_examined_positive" placeholder="0"/>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- STEP 2: Empreinte Moléculaire -->
+        @if (currentRiskStep === 2) {
+          <div class="rp-step-card">
+            <div class="rp-sc-header">
+              <div class="rp-sc-icon" style="--sc-color: #10b981;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z"/></svg>
+              </div>
+              <div>
+                <h3 class="rp-sc-title">Empreinte Biologique & Moléculaire</h3>
+                <p class="rp-sc-desc">Biomarqueurs, récepteurs et profil génomique</p>
+              </div>
+            </div>
+            <div class="rp-fields-grid rp-fields-4col">
+              <div class="rp-field">
+                <label>ER Status</label>
+                <select [(ngModel)]="riskForm.er_status">
+                  <option value="Positive">Positif</option>
+                  <option value="Negative">Négatif</option>
+                  <option value="Unknown">Inconnu</option>
+                </select>
+              </div>
+              <div class="rp-field">
+                <label>PR Status</label>
+                <select [(ngModel)]="riskForm.pr_status">
+                  <option value="Positive">Positif</option>
+                  <option value="Negative">Négatif</option>
+                  <option value="Unknown">Inconnu</option>
+                </select>
+              </div>
+              <div class="rp-field">
+                <label>HER2 Status</label>
+                <select [(ngModel)]="riskForm.her2_status">
+                  <option value="Positive">Positif</option>
+                  <option value="Negative">Négatif</option>
+                  <option value="Unknown">Inconnu</option>
+                </select>
+              </div>
+              <div class="rp-field">
+                <label>HER2 SNP6</label>
+                <select [(ngModel)]="riskForm.her2_status_measured_by_snp6">
+                  <option value="NEUTRAL">Neutre</option>
+                  <option value="GAIN">Gain</option>
+                  <option value="LOSS">Perte</option>
+                  <option value="UNDEF">Indéfini</option>
+                  <option value="Unknown">Inconnu</option>
+                </select>
+              </div>
+              <div class="rp-field">
+                <label>Sous-type PAM50</label>
+                <select [(ngModel)]="riskForm.pam50_claudin_low_subtype">
+                  <option value="claudin-low">Claudin-low</option>
+                  <option value="LumA">Luminal A</option>
+                  <option value="LumB">Luminal B</option>
+                  <option value="Her2">HER2-enriched</option>
+                  <option value="Basal">Basal-like</option>
+                  <option value="Normal">Normal-like</option>
+                  <option value="Unknown">Inconnu</option>
+                </select>
+              </div>
+              <div class="rp-field">
+                <label>Cluster Intégratif</label>
+                <select [(ngModel)]="riskForm.integrative_cluster">
+                  <option value="1">Cluster 1</option>
+                  <option value="2">Cluster 2</option>
+                  <option value="3">Cluster 3</option>
+                  <option value="4">Cluster 4</option>
+                  <option value="5">Cluster 5</option>
+                  <option value="6">Cluster 6</option>
+                  <option value="7">Cluster 7</option>
+                  <option value="8">Cluster 8</option>
+                  <option value="9">Cluster 9</option>
+                  <option value="10">Cluster 10</option>
+                  <option value="Unknown">Inconnu</option>
+                </select>
+              </div>
+              <div class="rp-field">
+                <label>Mutation Count</label>
+                <input type="number" [(ngModel)]="riskForm.mutation_count" placeholder="5"/>
+              </div>
+              <div class="rp-field">
+                <label>Nottingham Index</label>
+                <input type="number" step="0.1" [(ngModel)]="riskForm.nottingham_prognostic_index" placeholder="4.0"/>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- STEP 3: Parcours Thérapeutique -->
+        @if (currentRiskStep === 3) {
+          <div class="rp-step-card">
+            <div class="rp-sc-header">
+              <div class="rp-sc-icon" style="--sc-color: #e5953e;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+              </div>
+              <div>
+                <h3 class="rp-sc-title">Facteurs Thérapeutiques & Chirurgicaux</h3>
+                <p class="rp-sc-desc">Historique des traitements et interventions</p>
+              </div>
+            </div>
+            <div class="rp-fields-grid">
+              <div class="rp-field">
+                <label>Chirurgie Mammaire</label>
+                <select [(ngModel)]="riskForm.type_of_breast_surgery">
+                  <option value="MASTECTOMY">Mastectomie</option>
+                  <option value="BREAST CONSERVING">Conservatrice</option>
+                  <option value="Unknown">Inconnu</option>
+                </select>
+              </div>
+              <div class="rp-field">
+                <label>Chimiothérapie</label>
+                <select [(ngModel)]="riskForm.chemotherapy">
+                  <option value="Yes">Oui</option>
+                  <option value="No">Non</option>
+                  <option value="Unknown">Inconnu</option>
+                </select>
+              </div>
+              <div class="rp-field">
+                <label>Hormonothérapie</label>
+                <select [(ngModel)]="riskForm.hormone_therapy">
+                  <option value="Yes">Oui</option>
+                  <option value="No">Non</option>
+                  <option value="Unknown">Inconnu</option>
+                </select>
+              </div>
+              <div class="rp-field">
+                <label>Radiothérapie</label>
+                <select [(ngModel)]="riskForm.radio_therapy">
+                  <option value="Yes">Oui</option>
+                  <option value="No">Non</option>
+                  <option value="Unknown">Inconnu</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Wizard Footer -->
+      <div class="rp-wizard-footer">
+        <div class="rp-footer-info">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <span>Le modèle CatBoost analyse 22 paramètres pour estimer le risque de récurrence à 10 ans. 
+          Les champs marqués <strong style="color:var(--old-rose)">AUTO</strong> sont issus du dossier clinique.</span>
+        </div>
+        <div class="rp-footer-actions">
+          @if (currentRiskStep > 0) {
+            <button class="rp-btn-prev" (click)="prevRiskStep()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+              Précédent
+            </button>
+          }
+          @if (currentRiskStep < riskSteps.length - 1) {
+            <button class="rp-btn-next" (click)="nextRiskStep()">
+              Suivant
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+            </button>
+          } @else {
+            <button class="rp-btn-submit" (click)="submitRiskPrediction()" [disabled]="riskPredictionLoading">
+              @if (riskPredictionLoading) {
+                <div class="mini-spinner"></div>
+                Analyse en cours...
+              } @else {
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                Lancer l'Analyse Prédictive
+              }
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â• ULTRA PREMIUM RISK RESULT â•â•â•â•â•â•â•â•â•â•â• -->
+  
+  @if (state === 'risk-result' && riskResult; as res) {
+    <div class="rr-premium-wrap">
+      <!-- AI Analysis Banner -->
+      <div class="rr-ai-banner">
+        <div class="rr-ai-particles">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="rr-ai-check">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11"/></svg>
+        </div>
+        <div>
+          <span class="rr-ai-label">Analyse IA Terminée</span>
+          <span class="rr-ai-model">CatBoost v{{ res.model_version }} · {{ res.features_used }} paramètres analysés</span>
+        </div>
+      </div>
+
+      <!-- Main Result Layout -->
+      <div class="rr-main-grid" [ngClass]="res.risk_level === 'VERY_HIGH' ? 'rr-vhigh' : res.risk_level === 'HIGH' ? 'rr-high' : res.risk_level === 'MODERATE' ? 'rr-mod' : 'rr-low'">
+        
+        <!-- Gauge Column -->
+        <div class="rr-gauge-col">
+          <div class="rr-gauge-ring">
+            <svg viewBox="0 0 120 120" class="rr-gauge-svg">
+              <defs>
+                <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" [attr.stop-color]="res.risk_level === 'LOW' ? '#10b981' : res.risk_level === 'MODERATE' ? '#f59e0b' : '#e04668'"/>
+                  <stop offset="100%" [attr.stop-color]="res.risk_level === 'LOW' ? '#34d399' : res.risk_level === 'MODERATE' ? '#fbbf24' : '#ff6b8a'"/>
+                </linearGradient>
+              </defs>
+              <circle cx="60" cy="60" r="52" class="rr-g-track"/>
+              <circle cx="60" cy="60" r="52" class="rr-g-fill"
+                      [style.stroke-dasharray]="(res.probability * 326.7) + ' ' + (326.7 - res.probability * 326.7)"
+                      stroke="url(#gaugeGrad)"/>
+            </svg>
+            <div class="rr-g-center">
+              <span class="rr-g-percent">{{ res.probability_percent }}%</span>
+              <span class="rr-g-sublabel">Index de Risque</span>
+            </div>
+          </div>
+
+          <!-- Risk Badge -->
+          <div class="rr-risk-badge">
+            @if (res.is_high_risk) {
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            } @else {
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11"/></svg>
+            }
+            {{ res.risk_level === 'VERY_HIGH' ? 'RISQUE CRITIQUE' : 
+               res.risk_level === 'HIGH' ? 'RISQUE ÉLEVÉ' :
+               res.risk_level === 'MODERATE' ? 'RISQUE MODÉRÉ' : 'RISQUE MINIMAL' }}
+          </div>
+
+          <!-- Model Metrics -->
+          <div class="rr-metrics-col">
+            <div class="rr-metric">
+              <span class="rr-m-val">{{ res.model_metrics.f1 | number:'1.3-3' }}</span>
+              <span class="rr-m-label">Score F1</span>
+            </div>
+            <div class="rr-metric">
+              <span class="rr-m-val">{{ res.model_metrics.auc | number:'1.3-3' }}</span>
+              <span class="rr-m-label">AUC-ROC</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Verdict Column -->
+        <div class="rr-verdict-col">
+          <h2 class="rr-verdict-title">Verdict Intelligent de Récurrence</h2>
+          
+          <p class="rr-verdict-text">
+            Sur la base des caractéristiques cliniques et moléculaires analysées, le patient présente une probabilité estimée de récurrence à 10 ans de <strong>{{ res.probability_percent }}%</strong>.
+          </p>
+          <p class="rr-verdict-text">
+            Ce score est @if (res.is_high_risk) { <strong>supérieur</strong> } @else { inférieur } au seuil de décision optimisé (Seuil: {{ res.threshold * 100 | number:'1.0-1' }}%). 
+            Une surveillance @if (res.is_high_risk) { <strong>accrue et une revue du protocole thérapeutique</strong> } @else { standard } est recommandée.
+          </p>
+
+          <!-- Architecture info -->
+          <div class="rr-arch-row">
+            <div class="rr-arch-chip">
+              <span class="rr-ac-label">Architecture IA</span>
+              <span class="rr-ac-val">CatBoost v{{ res.model_version }}</span>
+            </div>
+            <div class="rr-arch-chip">
+              <span class="rr-ac-label">Calibration F1</span>
+              <span class="rr-ac-val">{{ res.model_metrics.f1 | number:'1.3-3' }}</span>
+            </div>
+            <div class="rr-arch-chip">
+              <span class="rr-ac-label">Robustesse AUC</span>
+              <span class="rr-ac-val">{{ res.model_metrics.auc | number:'1.3-3' }}</span>
+            </div>
+          </div>
+
+          <!-- ═══ Guide d'Interprétation pour le Médecin ═══ -->
+          <div class="rr-guide">
+            <div class="rr-guide-header">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+              <h3>Guide d'Interprétation des Résultats</h3>
+            </div>
+
+            <div class="rr-guide-grid">
+              <!-- Index de Risque -->
+              <div class="rr-guide-card">
+                <div class="rr-gc-icon" style="background:rgba(169,94,146,0.1); color:var(--old-rose);">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                </div>
+                <div class="rr-gc-content">
+                  <h4>Index de Risque ({{ res.probability_percent }}%)</h4>
+                  <p>Probabilité estimée que le cancer réapparaisse dans les <strong>10 prochaines années</strong>. Plus ce pourcentage est élevé, plus le risque de récurrence est important. Ce score est calculé à partir des 22 paramètres cliniques et moléculaires saisis.</p>
+                </div>
+              </div>
+
+              <!-- Niveaux de Risque -->
+              <div class="rr-guide-card">
+                <div class="rr-gc-icon" style="background:rgba(16,185,129,0.1); color:#10b981;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+                </div>
+                <div class="rr-gc-content">
+                  <h4>Niveaux de Risque</h4>
+                  <div class="rr-levels-list">
+                    <span class="rr-level-item rr-lvl-low"><strong>Minimal</strong> &lt; 25% — Surveillance standard recommandée</span>
+                    <span class="rr-level-item rr-lvl-mod"><strong>Modéré</strong> 25-50% — Suivi rapproché conseillé</span>
+                    <span class="rr-level-item rr-lvl-high"><strong>Élevé</strong> 50-75% — Réévaluation du protocole thérapeutique</span>
+                    <span class="rr-level-item rr-lvl-vhigh"><strong>Critique</strong> &gt; 75% — Action thérapeutique urgente recommandée</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Seuil de Décision -->
+              <div class="rr-guide-card">
+                <div class="rr-gc-icon" style="background:rgba(124,108,196,0.1); color:#7c6cc4;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+                </div>
+                <div class="rr-gc-content">
+                  <h4>Seuil de Décision ({{ res.threshold * 100 | number:'1.0-1' }}%)</h4>
+                  <p>Valeur de référence optimisée par le modèle. Si l'index de risque <strong>dépasse ce seuil</strong>, le patient est classé « à haut risque ». Ce seuil a été calibré pour équilibrer au mieux la détection des vrais positifs et la limitation des fausses alertes.</p>
+                </div>
+              </div>
+
+              <!-- Score F1 -->
+              <div class="rr-guide-card">
+                <div class="rr-gc-icon" style="background:rgba(229,149,62,0.1); color:#e5953e;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <div class="rr-gc-content">
+                  <h4>Score F1 ({{ res.model_metrics.f1 | number:'1.3-3' }})</h4>
+                  <p>Mesure la <strong>précision globale</strong> du modèle (entre 0 et 1). Un score de {{ res.model_metrics.f1 | number:'1.2-2' }} signifie que le modèle identifie correctement les patients à risque dans ~{{ res.model_metrics.f1 * 100 | number:'1.0-0' }}% des cas, tout en minimisant les faux diagnostics.</p>
+                </div>
+              </div>
+
+              <!-- AUC-ROC -->
+              <div class="rr-guide-card">
+                <div class="rr-gc-icon" style="background:rgba(14,165,233,0.1); color:#0ea5e9;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20 L8 14 L14 16 L22 4"/><circle cx="8" cy="14" r="1.5"/><circle cx="14" cy="16" r="1.5"/></svg>
+                </div>
+                <div class="rr-gc-content">
+                  <h4>AUC-ROC ({{ res.model_metrics.auc | number:'1.3-3' }})</h4>
+                  <p>Capacité du modèle à <strong>distinguer</strong> les patients à risque de ceux qui ne le sont pas (entre 0.5 et 1). Une valeur de {{ res.model_metrics.auc | number:'1.2-2' }} indique une excellente capacité discriminante. Au-dessus de 0.80, le modèle est considéré comme fiable en pratique clinique.</p>
+                </div>
+              </div>
+
+              <!-- CatBoost -->
+              <div class="rr-guide-card">
+                <div class="rr-gc-icon" style="background:rgba(22,21,69,0.08); color:var(--deep-blue);">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M20 15h2"/></svg>
+                </div>
+                <div class="rr-gc-content">
+                  <h4>Modèle CatBoost — METABRIC</h4>
+                  <p>Algorithme d'intelligence artificielle de type <strong>gradient boosting</strong>, entraîné sur la base de données METABRIC (1 904 patientes). Il analyse 22 caractéristiques cliniques, moléculaires et thérapeutiques pour estimer la probabilité de récurrence du cancer du sein.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="rr-actions">
+            <button class="rp-btn-prev" (click)="backToRiskForm()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"/></svg>
+              Modifier les Paramètres
+            </button>
+            <button class="rp-btn-submit" (click)="newAnalysis()">
+              Nouvelle Analyse Globale
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Disclaimer -->
+      <div class="rr-disclaimer">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <p>Cette estimation est basée sur les caractéristiques cliniques et moléculaires METABRIC. Elle constitue un outil d'aide à la décision et ne remplace pas le jugement clinique.</p>
+      </div>
+    </div>
+  }
+
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â• ERROR STATE â•â•â•â•â•â•â•â•â•â•â• -->
+  @if (state === 'error') {
+    <div class="error-section">
+      <div class="error-card">
+        <div class="error-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M15 9l-6 6"/>
+            <path d="M9 9l6 6"/>
+          </svg>
+        </div>
+        <h2 class="error-title">Échec de l'analyse</h2>
+        <p class="error-msg">{{ errorMessage }}</p>
+        <div class="error-actions">
+          <button class="btn-primary" (click)="retryAnalysis()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/>
+            </svg>
+            Réessayer
+          </button>
+          <button class="btn-secondary" (click)="backToPatientView()">Retour</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â• RESULT / HISTORY-DETAIL STATE â•â•â•â•â•â•â•â•â•â•â• -->
+  @if (state === 'result' || state === 'history-detail') {
+    <div class="result-section">
+
+      <!-- Back + patient info bar -->
+      <div class="result-top-bar">
+        <button class="btn-back" (click)="backToPatientView()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+          Retour
+        </button>
+        @if (selectedPatient) {
+          <div class="patient-pill">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            {{ selectedPatient.firstName }} {{ selectedPatient.lastName }}
+          </div>
+        }
+        @if (state === 'history-detail') {
+          <span class="history-detail-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            Historique
+          </span>
+        }
+      </div>
+
+      @if (state === 'history-detail' && historyDetailLoading) {
+        <div class="analyzing-section">
+          <div class="analyzing-card" style="justify-content: center;">
+            <div class="analyzing-content">
+              <div class="analyzing-spinner">
+                <div class="spinner-ring"></div>
+                <div class="spinner-ring spinner-ring--2"></div>
+                <div class="spinner-dot"></div>
+              </div>
+              <h2 class="analyzing-title">Chargement de l'analyse…</h2>
+            </div>
+          </div>
+        </div>
+      } @else {
+
+        <!-- â”€â”€ Global Verdict Banner â”€â”€ -->
+        <div class="verdict-banner" [ngClass]="verdictClass">
+          <div class="verdict-left">
+            <div class="verdict-icon-wrap">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                @for (p of parsePaths(verdictIcon); track $index) {
+                  <path [attr.d]="p"/>
+                }
+              </svg>
+            </div>
+            <div class="verdict-info">
+              <span class="verdict-label">Résultat Global</span>
+              <span class="verdict-value">{{ currentVerdict }}</span>
+            </div>
+          </div>
+
+          <div class="verdict-right">
+            <div class="confidence-gauge">
+              <svg viewBox="0 0 80 80" class="gauge-svg">
+                <circle cx="40" cy="40" r="34" class="gauge-bg"/>
+                <circle cx="40" cy="40" r="34" class="gauge-fill"
+                        [style.stroke-dasharray]="(confidencePercent / 100) * 213.6 + ' ' + (213.6 - (confidencePercent / 100) * 213.6)"/>
+              </svg>
+              <div class="gauge-label">
+                <span class="gauge-value">{{ confidencePercent }}%</span>
+                <span class="gauge-text">Confiance</span>
+              </div>
+            </div>
+
+            <div class="verdict-stats">
+              <div class="v-stat">
+                <span class="v-stat-num">{{ currentPredictions.length }}</span>
+                <span class="v-stat-label">{{ currentPredictions.length > 1 ? 'Détections' : 'Détection' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- â”€â”€ Main Result Grid â”€â”€ -->
+        <div class="result-grid">
+
+          <!-- Left: Image -->
+          <div class="result-image-card glass-card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <path d="M21 15l-5-5L5 21"/>
+                </svg>
+                Image annotée
+              </h3>
+              <div class="toggle-group">
+                <button class="toggle-btn" [class.active]="activeView === 'annotated'" (click)="activeView = 'annotated'">Annotée</button>
+                <button class="toggle-btn" [class.active]="activeView === 'segmentation'" (click)="activeView = 'segmentation'">Segmentation</button>
+                <button class="toggle-btn" [class.active]="activeView === 'original'" (click)="activeView = 'original'">Originale</button>
+              </div>
+            </div>
+            <div class="image-container">
+              @if (activeView === 'annotated' && currentFullImage) {
+                <img [src]="'data:image/jpeg;base64,' + currentFullImage" alt="Mammographie annotée" class="result-img"/>
+              } @else if (activeView === 'segmentation' && currentSegImage) {
+                <img [src]="'data:image/jpeg;base64,' + currentSegImage" alt="Segmentation" class="result-img"/>
+              } @else if (activeView === 'original' && currentNormalImage) {
+                <img [src]="'data:image/jpeg;base64,' + currentNormalImage" alt="Mammographie originale" class="result-img"/>
+              }
+            </div>
+          </div>
+
+          <!-- Right: Detections Panel -->
+          <div class="detections-panel">
+
+            @if (!currentDetections) {
+              <div class="no-detection-card glass-card">
+                <div class="no-detect-icon">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+                    <path d="M22 4L12 14.01l-3-3"/>
+                  </svg>
+                </div>
+                <h3 class="no-detect-title">Aucune anomalie détectée</h3>
+                <p class="no-detect-desc">L'analyse IA n'a identifié aucune masse ni calcification suspecte sur cette mammographie.</p>
+              </div>
+            } @else {
+              <!-- Detection tabs -->
+              <div class="detection-tabs">
+                @for (pred of currentPredictions; track $index) {
+                  <button class="det-tab" [class.active]="selectedPredictionIndex === $index"
+                          [ngClass]="getClassificationClass(pred.classification)"
+                          (click)="selectPrediction($index)">
+                    <span class="det-tab-idx">{{ $index + 1 }}</span>
+                    <span class="det-tab-label">{{ getLabelFr(pred.label) }}</span>
+                    <span class="det-tab-cls" [ngClass]="getClassificationClass(pred.classification)">{{ getClassificationFr(pred.classification) }}</span>
+                  </button>
+                }
+              </div>
+
+              <!-- Selected Detection Detail -->
+              @if (selectedPrediction) {
+                <div class="detection-detail glass-card">
+                  <div class="det-header" [ngClass]="getClassificationClass(selectedPrediction.classification)">
+                    <div class="det-type">
+                      <span class="det-type-badge" [ngClass]="getClassificationClass(selectedPrediction.classification)">
+                        {{ getClassificationFr(selectedPrediction.classification) }}
+                      </span>
+                      <span class="det-type-label">{{ getLabelFr(selectedPrediction.label) }}</span>
+                    </div>
+                    <div class="det-score">
+                      <div class="score-ring">
+                        <svg viewBox="0 0 48 48">
+                          <circle cx="24" cy="24" r="20" class="score-ring-bg"/>
+                          <circle cx="24" cy="24" r="20" class="score-ring-fill"
+                                  [style.stroke-dasharray]="(selectedPrediction.score * 125.6) + ' ' + (125.6 - selectedPrediction.score * 125.6)"/>
+                        </svg>
+                        <span class="score-val">{{ getScorePercent(selectedPrediction.score) }}%</span>
+                      </div>
+                      <span class="score-label">Confiance</span>
+                    </div>
+                  </div>
+
+                  @if (selectedPrediction.crop) {
+                    <div class="det-crop-wrap">
+                      <div class="crop-label">Zone détectée (zoom)</div>
+                      <img [src]="'data:image/jpeg;base64,' + selectedPrediction.crop" alt="Zoom détection" class="det-crop-img"/>
+                    </div>
+                  }
+
+                  <!-- Features -->
+                  @if (selectedPrediction.features) {
+                    <div class="features-grid">
+                      @if (selectedPrediction.features.morphology) {
+                        <div class="feature-group">
+                          <h4 class="feature-group-title">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+                            Morphologie
+                          </h4>
+                          <div class="feature-items">
+                            <div class="feature-item"><span class="feat-label">Aire</span><span class="feat-value">{{ formatFeature(selectedPrediction.features.morphology.area_mm2) }} mm²</span></div>
+                            <div class="feature-item"><span class="feat-label">Périmètre</span><span class="feat-value">{{ formatFeature(selectedPrediction.features.morphology.perimeter_mm) }} mm</span></div>
+                            <div class="feature-item"><span class="feat-label">Circularité</span><span class="feat-value">{{ formatFeature(selectedPrediction.features.morphology.circularity) }}</span></div>
+                            <div class="feature-item"><span class="feat-label">Excentricité</span><span class="feat-value">{{ formatFeature(selectedPrediction.features.morphology.eccentricity) }}</span></div>
+                          </div>
+                        </div>
+                      }
+                      @if (selectedPrediction.features.intensity) {
+                        <div class="feature-group">
+                          <h4 class="feature-group-title">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18"/><path d="M18 9l-6-6-6 6"/></svg>
+                            Intensité
+                          </h4>
+                          <div class="feature-items">
+                            <div class="feature-item"><span class="feat-label">Moyenne</span><span class="feat-value">{{ formatFeature(selectedPrediction.features.intensity.mean) }}</span></div>
+                            <div class="feature-item"><span class="feat-label">Écart-type</span><span class="feat-value">{{ formatFeature(selectedPrediction.features.intensity.std_dev) }}</span></div>
+                          </div>
+                        </div>
+                      }
+                      @if (selectedPrediction.features.texture) {
+                        <div class="feature-group">
+                          <h4 class="feature-group-title">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                            Texture
+                          </h4>
+                          <div class="feature-items">
+                            <div class="feature-item"><span class="feat-label">Homogénéité GLCM</span><span class="feat-value">{{ formatFeature(selectedPrediction.features.texture.glcm_homogeneity) }}</span></div>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            }
+          </div>
+        </div>
+
+        <!-- â•â•â•â•â•â•â•â•â•â•â• AI REPORT SECTION â•â•â•â•â•â•â•â•â•â•â• -->
+        <div class="report-section glass-card">
+          <div class="report-header">
+            <div class="report-header-left">
+              <div class="report-icon-wrap">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                  <polyline points="10 9 9 9 8 9"/>
+                </svg>
+              </div>
+              <div>
+                <h3 class="report-title">Rapport d'Analyse IA</h3>
+                <p class="report-subtitle">Rapport radiologique généré automatiquement par intelligence artificielle</p>
+              </div>
+            </div>
+            @if (!aiReport && !reportGenerating) {
+              <button class="btn-generate-report" (click)="generateReport()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                </svg>
+                Générer le rapport
+              </button>
+            }
+            @if (aiReport) {
+              <div class="report-header-actions" style="display: flex; gap: 8px;">
+                <button class="btn-download-pdf" (click)="downloadPDF()" style="display: flex; align-items: center; gap: 6px; padding: 6px 14px; border: 1px solid var(--primary-color); border-radius: 8px; background: transparent; color: var(--primary-color); font-weight: 500; cursor: pointer;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                  Télécharger PDF
+                </button>
+                <button class="btn-regenerate" (click)="generateReport()" [disabled]="reportGenerating">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/>
+                  </svg>
+                  Régénérer
+                </button>
+              </div>
+            }
+          </div>
+
+          <div class="report-content">
+            @if (reportGenerating) {
+              <div class="report-generating">
+                <div class="report-gen-spinner">
+                  <div class="spinner-ring"></div>
+                  <div class="spinner-ring spinner-ring--2"></div>
+                  <div class="spinner-dot"></div>
+                </div>
+                <p class="report-gen-text">Génération du rapport en cours…</p>
+                <p class="report-gen-sub">L'IA analyse les résultats et rédige le rapport</p>
+              </div>
+            } @else if (aiReport) {
+              <div class="report-body" id="report-content" style="padding: 24px; background: white; border-radius: 12px;">
+                <div class="report-badge">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+                  Rapport généré avec succès
+                </div>
+                <!-- Render parsed HTML here -->
+                <div class="report-text markdown-render" [innerHTML]="parsedAiReport"></div>
+                <div class="report-disclaimer">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                  <p>Ce rapport est généré automatiquement par IA et ne remplace pas l'avis d'un radiologue qualifié. Il doit être utilisé comme aide à la décision clinique uniquement.</p>
+                </div>
+              </div>
+
+            } @else {
+              <div class="report-empty">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                <p>Cliquez sur « Générer le rapport » pour obtenir un rapport radiologique détaillé basé sur les résultats de l'analyse IA.</p>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- â”€â”€ Actions â”€â”€ -->
+        <div class="new-analysis-row">
+          <button class="btn-new-analysis" (click)="newAnalysis()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 5v14"/><path d="M5 12h14"/>
+            </svg>
+            Nouvelle analyse
+          </button>
+        </div>
+
+      }
+    </div>
+  }
+
+
+<!-- â•â•â•â•â•â•â•â•â•â•â• HIDDEN PDF EXPORT TEMPLATE â•â•â•â•â•â•â•â•â•â•â• -->
+<div id="pdf-export-wrapper" style="position: absolute; left: -9999px; top: -9999px; width: 800px; background: white; color: #1f2937; padding: 20px;">
+  <div id="pdf-real-content" class="pdf-container" style="font-family: 'Inter', sans-serif;">
+    <div class="pdf-header" style="border-bottom: 2px solid #8b5cf6; padding-bottom: 12px; margin-bottom: 20px;">
+      <div class="pdf-logo" style="color: #8b5cf6; font-size: 24px; font-weight: 800; display:flex; align-items: center; gap: 8px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        SafeScan AI
+      </div>
+      <div class="pdf-title" style="font-size: 18px; font-weight: 600; margin-top: 8px;">RAPPORT CLINIQUE D'ANALYSE MAMMOGRAPHIQUE</div>
+      <div class="pdf-date" style="font-size: 14px; color: #6b7280;">Date de l'examen : {{ currentDate | date:'dd/MM/yyyy à HH:mm' }}</div>
+    </div>
+    
+    <div class="pdf-section" style="margin-bottom: 24px;">
+      <div class="pdf-section-title" style="font-size: 16px; font-weight: 600; color: #4c1d95; margin-bottom: 12px; border-left: 4px solid #8b5cf6; padding-left: 8px;">INFORMATIONS PATIENTE</div>
+      <table class="pdf-table" style="width: 100%; border-collapse: collapse; font-size: 14px;">
+        <tr>
+          <th style="text-align: left; padding: 8px; border-bottom: 1px solid #e5e7eb; color: #6b7280; width: 25%;">Nom / Prénom</th>
+          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: 600; width: 25%;">{{ currentPatientLastName | uppercase }} {{ currentPatientFirstName }}</td>
+          <th style="text-align: left; padding: 8px; border-bottom: 1px solid #e5e7eb; color: #6b7280; width: 25%;">ID Dossier</th>
+          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; width: 25%;">{{ selectedPatient?.medicalRecordNumber || 'Non spécifié' }}</td>
+        </tr>
+        <tr>
+          <th style="text-align: left; padding: 8px; border-bottom: 1px solid #e5e7eb; color: #6b7280;">Date de Naissance</th>
+          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">{{ selectedPatient?.dateOfBirth ? (selectedPatient?.dateOfBirth | date:'dd/MM/yyyy') : 'Non spécifié' }}</td>
+          <th style="text-align: left; padding: 8px; border-bottom: 1px solid #e5e7eb; color: #6b7280;">Médecin Référant</th>
+          <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">Dr. {{ doctorLastName || 'Introuvable' }}</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="pdf-section" style="margin-bottom: 24px;">
+      <div class="pdf-section-title" style="font-size: 16px; font-weight: 600; color: #4c1d95; margin-bottom: 12px; border-left: 4px solid #8b5cf6; padding-left: 8px;">SYNTÈSE DE L'IA</div>
+      
+      <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+        <div style="font-size: 16px; margin-bottom: 4px;">Verdict Global : <strong [ngStyle]="{'color': currentVerdict === 'Malin' ? '#ef4444' : (currentVerdict === 'Bénin' ? '#10b981' : '#f59e0b')}">{{ currentVerdict | uppercase }}</strong></div>
+        <div style="font-size: 14px; color: #4b5563;">Indice de confiance du modèle : <strong>{{ confidencePercent }}%</strong> | Détections analysées : <strong>{{ currentPredictions.length }}</strong></div>
+      </div>
+      
+      @if (currentPredictions.length > 0) {
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 12px; margin-bottom: 24px;">
+          <thead>
+            <tr style="background: #ede9fe; color: #4c1d95;">
+              <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Cible</th>
+              <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Classification IA</th>
+              <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Confiance</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (pred of currentPredictions; track $index) {
+              <tr style="background: white;">
+                <td style="padding: 10px; border: 1px solid #ddd; font-weight: 600;">{{ pred.label === 'mass' ? 'Masse' : 'Calcification' }} #{{ $index + 1 }}</td>
+                <td style="padding: 10px; border: 1px solid #ddd;" [ngStyle]="{'color': pred.classification === 'Malignant' ? '#ef4444' : (pred.classification === 'Benign' ? '#10b981' : '#374151')}">{{ pred.classification === 'Malignant' ? 'Maligne' : (pred.classification === 'Benign' ? 'Bénigne' : pred.classification) }}</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">{{ formatFeature(pred.score * 100) }}%</td>
+              </tr>
+              <!-- Sub-row for detailed features -->
+              @if (pred.features) {
+                <tr style="background: #fafafa;">
+                  <td colspan="3" style="padding: 12px; border: 1px solid #ddd;">
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; font-size: 11px;">
+                      <!-- Morphology -->
+                      @if (pred.features.morphology) {
+                        <div>
+                          <div style="font-weight: 700; color: #7c3aed; margin-bottom: 4px; text-decoration: underline;">Morphologie</div>
+                          <div>Aire: <strong>{{ formatFeature(pred.features.morphology.area_mm2) }} mm²</strong></div>
+                          <div>Périmètre: <strong>{{ formatFeature(pred.features.morphology.perimeter_mm) }} mm</strong></div>
+                          <div>Circularité: <strong>{{ formatFeature(pred.features.morphology.circularity) }}</strong></div>
+                          <div>Excentricité: <strong>{{ formatFeature(pred.features.morphology.eccentricity) }}</strong></div>
+                        </div>
+                      }
+                      <!-- Intensity -->
+                      @if (pred.features.intensity) {
+                        <div>
+                          <div style="font-weight: 700; color: #7c3aed; margin-bottom: 4px; text-decoration: underline;">Intensité</div>
+                          <div>Moyenne: <strong>{{ formatFeature(pred.features.intensity.mean) }}</strong></div>
+                          <div>Écart-type: <strong>{{ formatFeature(pred.features.intensity.std_dev) }}</strong></div>
+                        </div>
+                      }
+                      <!-- Texture -->
+                      @if (pred.features.texture) {
+                        <div>
+                          <div style="font-weight: 700; color: #7c3aed; margin-bottom: 4px; text-decoration: underline;">Texture</div>
+                          <div>Homogénéité GLCM: <strong>{{ formatFeature(pred.features.texture.glcm_homogeneity) }}</strong></div>
+                        </div>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+
+    @if (result?.fullImage) {
+      <div class="pdf-section" style="margin-bottom: 24px; text-align: center;">
+        <div class="pdf-section-title" style="text-align: left; font-size: 16px; font-weight: 600; color: #4c1d95; margin-bottom: 12px; border-left: 4px solid #8b5cf6; padding-left: 8px;">IMAGERIE ANNOTÉE (IA)</div>
+        <img style="max-width: 100%; max-height: 400px; object-fit: contain; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" [src]="'data:image/jpeg;base64,' + result?.fullImage" alt="Mammographie annotée" />
+      </div>
+    }
+
+    @if (parsedAiReport) {
+      <div class="pdf-section" style="margin-bottom: 24px; padding-top: 16px; border-top: 1px dashed #d1d5db;">
+        <div class="pdf-section-title" style="font-size: 16px; font-weight: 600; color: #4c1d95; margin-bottom: 12px; border-left: 4px solid #8b5cf6; padding-left: 8px;">RAPPORT CLINIQUE DÉTAILLÉ</div>
+        <div class="pdf-report-text markdown-render" style="font-size: 13px; line-height: 1.6; color: #374151;" [innerHTML]="parsedAiReport"></div>
+      </div>
+    }
+
+    <div class="pdf-footer" style="margin-top: 40px; padding-top: 12px; border-top: 2px solid #e5e7eb; font-size: 11px; color: #9ca3af; text-align: justify; line-height: 1.4;">
+      <strong>Avertissement Légal & Clinique :</strong> Ce document est généré automatiquement par intelligence artificielle (SafeScan AI). Il constitue un outil d'aide à la décision biomédicale basé sur des algorithmes de détection d'imagerie. <strong>Ce diagnostic préliminaire ne remplace en aucun cas l'expertise, la validation ou la prescription d'un radiologue certifié.</strong> Une corrélation avec l'examen clinique et éventuellement une confirmation histologique (biopsie) restent strictement nécessaires en cas d'anomalie détectée. Édité le {{ currentDate | date:'dd/MM/yyyy' }}.
+    </div>
+  </div>
+</div>

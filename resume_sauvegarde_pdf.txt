@@ -1,0 +1,39 @@
+Résumé de la sauvegarde des résultats de mammographie en PDF dans ImagingComponent
+
+Le processus de génération et de sauvegarde des résultats de mammographie sous format PDF dans le composant ImagingComponent (version docteur) suit les étapes techniques suivantes :
+
+1. Déclenchement :
+   L'action est lancée par la méthode `downloadPDF()` (lignes 441-461 du fichier TypeScript) lorsque l'utilisateur clique sur le bouton "Télécharger PDF" présent dans l'interface après une analyse.
+
+2. Bibliothèques utilisées :
+   Le système utilise la bibliothèque `html2pdf.js`, qui est une solution combinant :
+   - html2canvas : Pour transformer le contenu HTML en une image haute résolution.
+   - jsPDF : Pour intégrer cette image dans un document PDF structuré.
+
+3. Modèle HTML (Template) :
+   Un élément HTML spécifique identifié par l'ID `pdf-real-content` sert de base au document. Ce modèle est :
+   - Masqué à l'écran (positionné hors champ à gauche -9999px).
+   - Stylisé avec du CSS en ligne (inline styles) pour garantir un rendu précis et professionnel dans le PDF.
+   - Dynamique : il utilise le data-binding d'Angular pour injecter les données en temps réel.
+
+4. Contenu du PDF :
+   Le document généré inclut les informations suivantes :
+   - En-tête : Logo SafeScan AI, titre du rapport et date de l'examen.
+   - Informations Patiente : Nom, prénom, numéro de dossier (ID), date de naissance et médecin référant.
+   - Synthèse IA : Verdict global (Normal, Bénin, Malin, etc.) et indice de confiance global.
+   - Détails des Détections : Tableau listant chaque anomalie (masse ou calcification), sa classification et son score de confiance.
+   - Caractéristiques Morphologiques : Pour chaque détection, le PDF affiche l'aire (mm²), le périmètre, la circularité et l'excentricité.
+   - Imagerie : L'image de la mammographie avec les annotations de l'IA (en format base64).
+   - Rapport Clinique : Le texte détaillé du rapport généré par l'IA (converti du Markdown en HTML).
+   - Avertissement Légal : Une clause de non-responsabilité rappelant que l'IA est un outil d'aide et ne remplace pas le radiologue.
+
+5. Paramètres de configuration :
+   La méthode configure l'exportation avec les options suivantes :
+   - Format : A4 en mode portrait.
+   - Marges : 10 mm sur tous les côtés.
+   - Nom du fichier : Dynamique, sous la forme "Rapport_SafeScan_[NOM_PATIENTE].pdf".
+   - Qualité d'image : JPEG avec une qualité de 0.98.
+   - Résolution : Mise à l'échelle (scale 2) pour assurer la netteté des textes et des images.
+
+6. Finalisation :
+   Une fois la conversion terminée, la bibliothèque déclenche automatiquement le téléchargement du fichier via le navigateur de l'utilisateur.
